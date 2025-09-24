@@ -20,21 +20,23 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   });
 
   useEffect(() => {
-    const savedFruits = localStorage.getItem('fruits');
-    if (savedFruits) {
-      setFruits(JSON.parse(savedFruits));
-    }
+    const fetchFruits = async () => {
+      try {
+        const res = await fetch("https://yoursubdomain.loca.lt/fruits/");
+        if (!res.ok) throw new Error("Failed to fetch fruits");
+        const data = await res.json();
+        setFruits(data);
+      } catch (err) {
+        console.error("Failed to fetch fruits:", err);
+      }
+    };
+    fetchFruits();
   }, []);
 
-  const saveFruits = (updatedFruits: Fruit[]) => {
-    setFruits(updatedFruits);
-    localStorage.setItem('fruits', JSON.stringify(updatedFruits));
-  };
-
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newFruit: Fruit = {
-      id: Date.now().toString(),
+
+    const newFruit = {
       name: formData.name,
       price: parseFloat(formData.price),
       image: formData.image,
@@ -43,9 +45,28 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
       stock: parseInt(formData.stock)
     };
 
-    saveFruits([...fruits, newFruit]);
-    setShowAddForm(false);
-    resetForm();
+    try {
+      const response = await fetch("https://yoursubdomain.loca.lt/fruits/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newFruit),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add fruit");
+      }
+
+      const createdFruit: Fruit = await response.json();
+
+      setFruits([...fruits, createdFruit]);
+      setShowAddForm(false);
+      resetForm();
+    } catch (error) {
+      console.error("Error adding fruit:", error);
+      alert("Error adding fruit");
+    }
   };
 
   const handleEdit = (fruit: Fruit) => {
@@ -60,7 +81,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     });
   };
 
-  const handleUpdate = (e: React.FormEvent) => {
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingFruit) return;
 
@@ -74,19 +95,44 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
       stock: parseInt(formData.stock)
     };
 
-    const updatedFruits = fruits.map(fruit =>
-      fruit.id === editingFruit.id ? updatedFruit : fruit
-    );
+    try {
+      const response = await fetch(`https://yoursubdomain.loca.lt/fruits/${editingFruit.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedFruit),
+      });
 
-    saveFruits(updatedFruits);
-    setEditingFruit(null);
-    resetForm();
+      if (!response.ok) throw new Error("Failed to update fruit");
+
+      const savedFruit: Fruit = await response.json();
+
+      setFruits(fruits.map(fruit =>
+        fruit.id === savedFruit.id ? savedFruit : fruit
+      ));
+      setEditingFruit(null);
+      resetForm();
+    } catch (err) {
+      console.error("Error updating fruit:", err);
+      alert("Update failed");
+    }
   };
 
-  const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this fruit?')) {
-      const updatedFruits = fruits.filter(fruit => fruit.id !== id);
-      saveFruits(updatedFruits);
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this fruit?')) return;
+
+    try {
+      const response = await fetch(`https://yoursubdomain.loca.lt/fruits/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Failed to delete fruit");
+
+      setFruits(fruits.filter(fruit => fruit.id !== id));
+    } catch (err) {
+      console.error("Error deleting fruit:", err);
+      alert("Delete failed");
     }
   };
 
