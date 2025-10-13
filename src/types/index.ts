@@ -4,7 +4,12 @@ export interface User {
   password: string;
   isAdmin: boolean;
   name: string;
+  phone?: string;
+  birthday?: string; 
+  gender?: string;
+  address?: string;
 }
+
 
 export interface Fruit {
   id: string;

@@ -8,11 +8,13 @@ import ProductGrid from './components/Products/ProductGrid.tsx';
 import Cart from './components/Cart/Cart.tsx';
 import OrderHistory from './components/Orders/OrderHistory.tsx';
 import AdminDashboard from './components/Admin/AdminDashboard.tsx';
+import BillsDashboard from './components/Bills/BillsDashboard.tsx';
+import AccountPage from './components/Account/AccountPage.tsx';
 
 const AppContent: React.FC = () => {
   const { user } = useAuth();
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const [currentView, setCurrentView] = useState<'products' | 'orders' | 'admin'>('products');
+  const [currentView, setCurrentView] = useState<'products' | 'orders' | 'bills' | 'admin' | 'account'>('products');
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const toggleAuthMode = () => {
@@ -41,6 +43,8 @@ const AppContent: React.FC = () => {
       <main>
         {currentView === 'products' && <ProductGrid />}
         {currentView === 'orders' && <OrderHistory />}
+        {currentView === 'bills' && <BillsDashboard />}
+        {currentView === 'account' && <AccountPage onBack={() => setCurrentView('products')} />}
       </main>
 
       <Cart 
