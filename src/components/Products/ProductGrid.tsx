@@ -11,76 +11,22 @@ const ProductGrid: React.FC = () => {
   const [sortBy, setSortBy] = useState('name');
 
   useEffect(() => {
-    // Initialize with default fruits if none exist
-    const savedFruits = localStorage.getItem('fruits');
-    if (!savedFruits) {
-      const defaultFruits: Fruit[] = [
-        {
-          id: '1',
-          name: 'Fresh Apples',
-          price: 3.99,
-          image: 'https://images.pexels.com/photos/102104/pexels-photo-102104.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Crisp and sweet red apples, perfect for snacking or baking.',
-          category: 'Apples',
-          stock: 50
-        },
-        {
-          id: '2',
-          name: 'Ripe Bananas',
-          price: 2.49,
-          image: 'https://images.pexels.com/photos/2872755/pexels-photo-2872755.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Yellow bananas packed with potassium and natural sweetness.',
-          category: 'Tropical',
-          stock: 75
-        },
-        {
-          id: '3',
-          name: 'Juicy Oranges',
-          price: 4.99,
-          image: 'https://images.pexels.com/photos/357573/pexels-photo-357573.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Fresh Valencia oranges bursting with vitamin C.',
-          category: 'Citrus',
-          stock: 60
-        },
-        {
-          id: '4',
-          name: 'Sweet Strawberries',
-          price: 5.99,
-          image: 'https://images.pexels.com/photos/46174/strawberries-berries-fruit-freshness-46174.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Hand-picked strawberries, sweet and perfect for desserts.',
-          category: 'Berries',
-          stock: 30
-        },
-        {
-          id: '5',
-          name: 'Fresh Grapes',
-          price: 6.99,
-          image: 'https://images.pexels.com/photos/708777/pexels-photo-708777.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Seedless green grapes, sweet and refreshing.',
-          category: 'Grapes',
-          stock: 45
-        },
-        {
-          id: '6',
-          name: 'Ripe Mangoes',
-          price: 7.99,
-          image: 'https://images.pexels.com/photos/918352/pexels-photo-918352.jpeg?auto=compress&cs=tinysrgb&w=400',
-          description: 'Tropical mangoes with rich, sweet flavor.',
-          category: 'Tropical',
-          stock: 25
-        }
-      ];
-      localStorage.setItem('fruits', JSON.stringify(defaultFruits));
-      setFruits(defaultFruits);
-    } else {
-      setFruits(JSON.parse(savedFruits));
-    }
+    const fetchFruits = async () => {
+      try {
+        const res = await fetch("https://yoursubdomain.loca.lt/fruits/");
+        if (!res.ok) throw new Error("Failed to fetch fruits");
+        const data = await res.json();
+        setFruits(data);
+      } catch (err) {
+        console.error("Failed to fetch fruits:", err);
+      }
+    };
+    fetchFruits();
   }, []);
 
   useEffect(() => {
-    let filtered = fruits;
+    let filtered = [...fruits];
 
-    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(fruit =>
         fruit.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -88,20 +34,18 @@ const ProductGrid: React.FC = () => {
       );
     }
 
-    // Filter by category
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(fruit => fruit.category === selectedCategory);
     }
 
-    // Sort fruits
     filtered = filtered.sort((a, b) => {
       switch (sortBy) {
         case 'name':
           return a.name.localeCompare(b.name);
         case 'price-low':
-          return b.price - a.price;
+          return a.price - b.price;   // low → high
         case 'price-high':
-          return a.price - b.price;
+          return b.price - a.price;   // high → low
         default:
           return 0;
       }
@@ -122,7 +66,6 @@ const ProductGrid: React.FC = () => {
       {/* Filters */}
       <div className="mb-8 bg-white rounded-lg shadow-lg p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -134,7 +77,6 @@ const ProductGrid: React.FC = () => {
             />
           </div>
 
-          {/* Category Filter */}
           <div className="relative">
             <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <select
@@ -150,7 +92,6 @@ const ProductGrid: React.FC = () => {
             </select>
           </div>
 
-          {/* Sort */}
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
@@ -163,7 +104,6 @@ const ProductGrid: React.FC = () => {
         </div>
       </div>
 
-      {/* Product Grid */}
       {filteredFruits.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredFruits.map(fruit => (
