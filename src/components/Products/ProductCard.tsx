@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Star } from 'lucide-react';
+import { StoreIcon, Star } from 'lucide-react';
 import type { Fruit } from '../../types';
 import { useCart } from '../../context/CartContext';
 
@@ -42,20 +42,20 @@ const ProductCard: React.FC<ProductCardProps> = ({ fruit }) => {
         
         <div className="flex items-center justify-between mb-4">
           <span className="text-2xl font-bold text-green-600">${fruit.price.toFixed(2)}</span>
-          <span className="text-sm text-gray-500">{fruit.stock} in stock</span>
+          <span className="text-sm text-gray-500">{fruit.quantity} in quantity</span>
         </div>
         
         <button
           onClick={handleAddToCart}
-          disabled={fruit.stock === 0}
+          disabled={fruit.quantity === 0}
           className={`w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-lg font-medium transition-all ${
-            fruit.stock > 0
+            fruit.quantity > 0
               ? 'bg-cyan-950 text-white hover:from-green-600 hover:to-orange-600 transform hover:scale-105'
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
         >
-          <Plus className="w-4 h-4" />
-          <span>{fruit.stock > 0 ? 'Add to Cart' : 'Out of Stock'}</span>
+          <StoreIcon className="w-4 h-4" />
+          <span>{fruit.quantity > 0 ? 'Add to cart' : 'Out of quantity'}</span>
         </button>
       </div>
     </div>

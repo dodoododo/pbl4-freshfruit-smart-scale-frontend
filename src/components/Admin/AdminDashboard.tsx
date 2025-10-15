@@ -16,7 +16,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     image: '',
     description: '',
     category: '',
-    stock: ''
+    quantity: ''
   });
 
   useEffect(() => {
@@ -42,7 +42,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
       image: formData.image,
       description: formData.description,
       category: formData.category,
-      stock: parseInt(formData.stock)
+      quantity: parseInt(formData.quantity)
     };
 
     try {
@@ -77,7 +77,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
       image: fruit.image,
       description: fruit.description,
       category: fruit.category,
-      stock: fruit.stock.toString()
+      quantity: fruit.quantity.toString()
     });
   };
 
@@ -92,7 +92,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
       image: formData.image,
       description: formData.description,
       category: formData.category,
-      stock: parseInt(formData.stock)
+      quantity: parseInt(formData.quantity)
     };
 
     try {
@@ -143,7 +143,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
       image: '',
       description: '',
       category: '',
-      stock: ''
+      quantity: ''
     });
   };
 
@@ -200,11 +200,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Stock</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">quantity</label>
           <input
             type="number"
-            value={formData.stock}
-            onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+            value={formData.quantity}
+            onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
             required
           />
@@ -302,7 +302,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                     Price
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Stock
+                    quantity
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -333,13 +333,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        fruit.stock > 10 
+                        fruit.quantity > 10 
                           ? 'bg-green-100 text-green-800'
-                          : fruit.stock > 0
+                          : fruit.quantity > 0
                           ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-red-100 text-red-800'
                       }`}>
-                        {fruit.stock} units
+                        {fruit.quantity} units
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">

@@ -3,7 +3,7 @@ import { ShoppingCart, User, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 
-type View = 'products' | 'orders' | 'admin';
+type View = 'products' | 'orders' | 'bills' | 'admin' | 'account' | 'employees';
 
 interface HeaderProps {
   onToggleCart: () => void;
@@ -50,6 +50,30 @@ const Header: React.FC<HeaderProps> = ({ onToggleCart, onNavigateToAdmin, curren
             >
               Orders
             </button>
+
+            <button
+              onClick={() => onViewChange('bills')}
+              className={`px-3 py-2 text-sm font-medium transition-colors ${
+                currentView === 'bills'
+                  ? 'text-green-600 border-b-2 border-green-600'
+                  : 'text-gray-700 hover:text-green-600'
+              }`}
+            >
+              Bills
+            </button>
+
+            {isAdmin && (
+              <button
+                onClick={() => onViewChange('employees')}
+                className={`px-3 py-2 text-sm font-medium transition-colors ${
+                  currentView === 'employees'
+                    ? 'text-green-600 border-b-2 border-green-600'
+                    : 'text-gray-700 hover:text-green-600'
+                }`}
+              >
+                Employees
+              </button>
+            )}
           </nav>
 
           <div className="flex items-center space-x-4">
@@ -75,9 +99,11 @@ const Header: React.FC<HeaderProps> = ({ onToggleCart, onNavigateToAdmin, curren
               </button>
             )}
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 cursor-pointer" onClick={() => onViewChange('account')}>
               <User className="w-5 h-5 text-gray-600" />
-              <span className="text-sm text-gray-700">{user?.name}</span>
+              <span className="text-sm text-gray-700 hover:text-green-600 transition-colors">
+                {user?.name}
+              </span>
             </div>
 
             <button
