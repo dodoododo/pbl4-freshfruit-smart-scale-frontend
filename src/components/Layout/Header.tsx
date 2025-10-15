@@ -3,7 +3,7 @@ import { ShoppingCart, User, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 
-type View = 'products' | 'orders' | 'bills' | 'admin' | 'account';
+type View = 'products' | 'orders' | 'bills' | 'admin' | 'account' | 'employees';
 
 interface HeaderProps {
   onToggleCart: () => void;
@@ -62,6 +62,18 @@ const Header: React.FC<HeaderProps> = ({ onToggleCart, onNavigateToAdmin, curren
               Bills
             </button>
 
+            {isAdmin && (
+              <button
+                onClick={() => onViewChange('employees')}
+                className={`px-3 py-2 text-sm font-medium transition-colors ${
+                  currentView === 'employees'
+                    ? 'text-green-600 border-b-2 border-green-600'
+                    : 'text-gray-700 hover:text-green-600'
+                }`}
+              >
+                Employees
+              </button>
+            )}
           </nav>
 
           <div className="flex items-center space-x-4">
