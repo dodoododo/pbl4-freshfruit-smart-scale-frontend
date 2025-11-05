@@ -35,21 +35,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('cart', JSON.stringify(items));
   }, [items]);
 
-  const addToCart = (fruit: Fruit, quantity = 1) => {
+  const addToCart = (fruit: Fruit) => {
     setItems(prevItems => {
-      const existingItem = prevItems.find(item => item.fruit.id === fruit.id);
-      
-      if (existingItem) {
-        return prevItems.map(item =>
-          item.fruit.id === fruit.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
-      }
-      
-      return [...prevItems, { fruit, quantity }];
+      const exists = prevItems.some(item => item.fruit.id === fruit.id);
+
+      // If the fruit already exists, return the list unchanged
+      if (exists) return prevItems;
+
+      // Otherwise, add it as a new item with default weight 0
+      return [...prevItems, { fruit, quantity: 0 }];
     });
   };
+
 
   const removeFromCart = (fruitId: string) => {
     setItems(prevItems => prevItems.filter(item => item.fruit.id !== fruitId));
@@ -73,7 +70,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const getTotalItems = () => {
-    return items.reduce((total, item) => total + item.quantity, 0);
+    return items.length;
   };
 
   const getTotalPrice = () => {
