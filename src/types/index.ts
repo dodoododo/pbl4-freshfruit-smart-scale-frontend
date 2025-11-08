@@ -34,6 +34,8 @@ export interface ShippingAddress {
   zipCode: string;
 }
 
+
+
 export interface Order {
   id: string;
   userId: string;
@@ -51,4 +53,22 @@ export interface AuthContextType {
   signup: (email: string, password: string, name: string) => boolean;
   logout: () => void;
   isAdmin: boolean;
+}
+
+
+export interface BillDetail {
+  detail_id: number;
+  fruit_id: number;
+  fruit_name: string;
+  weight: number;
+  price: number;
+}
+
+export interface Bill {
+  bill_id: number;
+  date: string;
+  user_id: number;
+  cus_id: number;
+  total_cost: number;
+  bill_details: BillDetail[];
 }
