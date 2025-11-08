@@ -3,7 +3,7 @@ import { ShoppingCart, User, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 
-type View = 'products' | 'orders' | 'bills' | 'admin' | 'account' | 'employees';
+type View = 'products' | 'orders' | 'bills' | 'billHistory' | 'admin' | 'account' | 'employees';
 
 interface HeaderProps {
   onToggleCart: () => void;
@@ -20,8 +20,9 @@ const Header: React.FC<HeaderProps> = ({ onToggleCart, onNavigateToAdmin, curren
     <header className="bg-white shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
+          {/* Logo */}
           <div className="flex items-center">
-            <div 
+            <div
               className="text-2xl font-bold bg-gradient-to-r from-green-600 to-orange-500 bg-clip-text text-transparent cursor-pointer"
               onClick={() => onViewChange('products')}
             >
@@ -29,6 +30,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleCart, onNavigateToAdmin, curren
             </div>
           </div>
 
+          {/* Navigation */}
           <nav className="hidden md:flex space-x-8">
             <button
               onClick={() => onViewChange('products')}
@@ -40,6 +42,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleCart, onNavigateToAdmin, curren
             >
               Products
             </button>
+
             <button
               onClick={() => onViewChange('orders')}
               className={`px-3 py-2 text-sm font-medium transition-colors ${
@@ -62,6 +65,18 @@ const Header: React.FC<HeaderProps> = ({ onToggleCart, onNavigateToAdmin, curren
               Bills
             </button>
 
+            {/* ✅ New Bill History button */}
+            <button
+              onClick={() => onViewChange('billHistory')}
+              className={`px-3 py-2 text-sm font-medium transition-colors ${
+                currentView === 'billHistory'
+                  ? 'text-green-600 border-b-2 border-green-600'
+                  : 'text-gray-700 hover:text-green-600'
+              }`}
+            >
+              Bill History
+            </button>
+
             {isAdmin && (
               <button
                 onClick={() => onViewChange('employees')}
@@ -76,6 +91,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleCart, onNavigateToAdmin, curren
             )}
           </nav>
 
+          {/* Right side icons */}
           <div className="flex items-center space-x-4">
             <button
               onClick={onToggleCart}
@@ -99,7 +115,10 @@ const Header: React.FC<HeaderProps> = ({ onToggleCart, onNavigateToAdmin, curren
               </button>
             )}
 
-            <div className="flex items-center space-x-2 cursor-pointer" onClick={() => onViewChange('account')}>
+            <div
+              className="flex items-center space-x-2 cursor-pointer"
+              onClick={() => onViewChange('account')}
+            >
               <User className="w-5 h-5 text-gray-600" />
               <span className="text-sm text-gray-700 hover:text-green-600 transition-colors">
                 {user?.name}

@@ -11,11 +11,12 @@ import AdminDashboard from './components/Admin/AdminDashboard.tsx';
 import BillsDashboard from './components/Bills/BillsDashboard.tsx';
 import AccountPage from './components/Account/AccountPage.tsx';
 import EmployeeManagement from './components/Employees/EmployeeManagement.tsx';
+import BillHistory from './components/Orders/BillHistory.tsx';
 
 const AppContent: React.FC = () => {
   const { user } = useAuth();
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const [currentView, setCurrentView] = useState<'products' | 'orders' | 'bills' | 'admin' | 'account' | 'employees'>('products');
+  const [currentView, setCurrentView] = useState<'products' | 'orders' | 'billHistory' | 'bills' | 'admin' | 'account' | 'employees'>('products');
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   const toggleAuthMode = () => {
@@ -44,6 +45,7 @@ const AppContent: React.FC = () => {
       <main>
         {currentView === 'products' && <ProductGrid />}
         {currentView === 'orders' && <OrderHistory />}
+        {currentView === 'billHistory' && <BillHistory />}
         {currentView === 'bills' && <BillsDashboard />}
         {currentView === 'account' && <AccountPage onBack={() => setCurrentView('products')} />}
         {currentView === 'employees' && <EmployeeManagement />}

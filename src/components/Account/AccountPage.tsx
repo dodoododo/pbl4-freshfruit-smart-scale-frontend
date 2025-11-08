@@ -20,6 +20,7 @@ const AccountPage: React.FC<AccountPageProps> = ({ onBack }) => {
     birthday: user?.birthday || '',
     gender: user?.gender || '',
     address: user?.address || '',
+    userId: user?.id || '',
   });
 
   const [showPasswordChange, setShowPasswordChange] = useState(false);
