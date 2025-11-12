@@ -1,32 +1,35 @@
 import React, { useState } from 'react';
 import { LogIn, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext.jsx';
+import { useAuth } from '../../context/AuthContext';
 
 interface LoginProps {
   onToggleMode: () => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onToggleMode }) => {
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
+    setSuccess('');
+    setIsLoading(true);
 
-    setTimeout(() => {
-      const success = login(email, password);
-      
-      if (!success) {
-        setError('Invalid email or password');
-      }
-      setIsLoading(false);
-    }, 500);
+    const success = await login(email, password);
+    if (success) {
+      setSuccess('Login successful!');
+      setTimeout(() => (window.location.href = '/'), 1500);
+    } else {
+      setError('Invalid email or password');
+    }
+
+    setIsLoading(false);
   };
 
   return (
@@ -41,71 +44,29 @@ const Login: React.FC<LoginProps> = ({ onToggleMode }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-              placeholder="Enter your email"
-              required
-            />
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email address" className="w-full px-4 py-3 border rounded-lg" required />
+          <div className="relative">
+            <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" className="w-full px-4 py-3 border rounded-lg pr-10" required />
+            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all pr-12"
-                placeholder="Enter your password"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
+          {error && <div className="text-red-600 text-sm">{error}</div>}
+          {success && <div className="text-green-600 text-sm">{success}</div>}
 
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-green-400 text-white py-3 px-4 rounded-lg font-medium hover:from-green-600 hover:to-orange-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 transition-all"
-          >
+          <button type="submit" disabled={isLoading} className="w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition-all">
             {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
         <div className="mt-6 text-center">
           <p className="text-gray-600">
-            Don't have an account?{' '}
-            <button
-              onClick={onToggleMode}
-              className="text-green-600 hover:text-green-700 font-medium"
-            >
+            Don’t have an account?{' '}
+            <button onClick={onToggleMode} className="text-green-600 hover:text-green-700 font-medium">
               Sign up
             </button>
           </p>
-        </div> 
-
-        <div className="mt-4 text-center">
         </div>
       </div>
     </div>

@@ -1,5 +1,34 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { User, AuthContextType } from '../types/index.ts';
+
+export interface User {
+  id?: string;
+  name?: string;
+  email: string;
+  token?: string;
+  role?: boolean;
+  valid?: boolean;
+}
+
+export interface SignupData {
+  email: string;
+  password: string;
+  name: string;
+  phone: string;
+  address: string;
+  birth: string;
+  gender: boolean;
+  username: string;
+  role: boolean;
+  valid: boolean;
+}
+
+export interface AuthContextType {
+  user: User | null;
+  login: (email: string, password: string) => Promise<boolean>;
+  signup: (data: SignupData) => Promise<boolean>;
+  logout: () => void;
+  isAdmin: boolean;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -14,6 +43,7 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
 
+  // Load user khi reload trang
   useEffect(() => {
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
@@ -21,40 +51,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const login = (email: string, password: string): boolean => {
-    const users = JSON.parse(localStorage.getItem('users') || '[]') as User[];
-    const foundUser = users.find(u => u.email === email && u.password === password);
-    
-    if (foundUser) {
-      setUser(foundUser);
-      localStorage.setItem('currentUser', JSON.stringify(foundUser));
+  // === LOGIN ===
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const response = await fetch('https://yoursubdomain.loca.lt/user/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          accept: 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) return false;
+
+      const data = await response.json();
+      setUser(data);
+      localStorage.setItem('currentUser', JSON.stringify(data));
       return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-    return false;
   };
 
-  const signup = (email: string, password: string, name: string): boolean => {
-    const users = JSON.parse(localStorage.getItem('users') || '[]') as User[];
-    
-    if (users.find(u => u.email === email)) {
-      return false; // User already exists
+  // === SIGNUP ===
+  const signup = async (signupData: SignupData): Promise<boolean> => {
+    try {
+      const response = await fetch('https://yoursubdomain.loca.lt/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          accept: 'application/json',
+        },
+        body: JSON.stringify(signupData),
+      });
+
+      if (!response.ok) return false;
+
+      const data = await response.json();
+      setUser(data);
+      localStorage.setItem('currentUser', JSON.stringify(data));
+      return true;
+    } catch (error) {
+      console.error('Signup error:', error);
+      return false;
     }
-
-    const newUser: User = {
-      id: Date.now().toString(),
-      email,
-      password,
-      name,
-      isAdmin: email === 'admin@freshfruit.com' // First user or specific email is admin
-    };
-
-    users.push(newUser);
-    localStorage.setItem('users', JSON.stringify(users));
-    setUser(newUser);
-    localStorage.setItem('currentUser', JSON.stringify(newUser));
-    return true;
   };
 
+  // === LOGOUT ===
   const logout = () => {
     setUser(null);
     localStorage.removeItem('currentUser');
@@ -65,7 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login,
     signup,
     logout,
-    isAdmin: user?.isAdmin || false
+    isAdmin: user?.role === true || false,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
