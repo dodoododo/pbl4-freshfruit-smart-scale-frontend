@@ -53,10 +53,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateQuantity = (fruitId: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(fruitId);
-      return;
-    }
     
     setItems(prevItems =>
       prevItems.map(item =>
@@ -70,7 +66,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const getTotalItems = () => {
-    return items.length;
+    return items.length;   
   };
 
   const getTotalPrice = () => {

@@ -11,6 +11,8 @@ interface CheckoutFormProps {
 
 const API_BASE = "https://yoursubdomain.loca.lt";
 
+const currentUser = localStorage.getItem('currentUser');
+
 const CheckoutForm: React.FC<CheckoutFormProps> = ({ onComplete, onBack }) => {
   const { items, getTotalPrice } = useCart();
   const { user } = useAuth();
@@ -127,7 +129,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onComplete, onBack }) => {
 
       // ✅ Prepare bill
       const billData = {
-        user_id: 1, // <---- ✅ mặc định user_id = 1
+        user_id: currentUser ? JSON.parse(currentUser).id : 1, // <---- ✅ mặc định user_id = 1
         cus_id: foundCustomer?.cus_id || 0,
         items: items.map((item) => ({
           fruit_id: item.fruit.id,
