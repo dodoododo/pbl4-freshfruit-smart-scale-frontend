@@ -93,7 +93,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode }) => {
           </button>
         </form>
 
-        {/* <div className="mt-6 text-center">
+        <div className="mt-6 text-center">
           <p className="text-gray-600">
             Don't have an account?{' '}
             <button
@@ -103,7 +103,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode }) => {
               Sign up
             </button>
           </p>
-        </div> */}
+        </div> 
 
         <div className="mt-4 text-center">
         </div>

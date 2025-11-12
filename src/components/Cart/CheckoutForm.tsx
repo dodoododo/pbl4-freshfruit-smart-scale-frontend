@@ -177,7 +177,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onComplete, onBack }) => {
 
   // 🧩 MAIN FORM
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-screen overflow-y-auto">
       {/* Header */}
       <div className="flex items-center p-6 border-b">
         <button
@@ -190,129 +190,185 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onComplete, onBack }) => {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-md mx-auto space-y-6">
-          {mode === "choose" && (
-            <div className="bg-white shadow rounded-xl p-6 flex flex-col space-y-4 text-center border">
-              <h3 className="text-lg font-semibold text-gray-800">
-                Chọn thao tác
-              </h3>
-              <button
-                type="button"
-                onClick={() => setMode("find")}
-                className="flex justify-center items-center bg-green-500 text-white py-2.5 rounded-lg hover:bg-green-600 transition"
-              >
-                <UserSearch className="w-5 h-5 mr-2" /> Tìm khách hàng theo SĐT
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("create")}
-                className="flex justify-center items-center bg-blue-500 text-white py-2.5 rounded-lg hover:bg-blue-600 transition"
-              >
-                <UserPlus className="w-5 h-5 mr-2" /> Tạo khách hàng mới
-              </button>
-            </div>
-          )}
+      <div className="flex-col h-screen overflow-y-auto">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
+          <div className="max-w-md mx-auto space-y-6">
+            {/* --- CHOOSE MODE --- */}
+            {mode === "choose" && (
+              <div className="bg-white shadow rounded-xl p-6 flex flex-col space-y-4 text-center border">
+                <h3 className="text-lg font-semibold text-gray-800">Chọn thao tác</h3>
+                <button
+                  type="button"
+                  onClick={() => setMode("find")}
+                  className="flex justify-center items-center bg-green-500 text-white py-2.5 rounded-lg hover:bg-green-600 transition"
+                >
+                  <UserSearch className="w-5 h-5 mr-2" /> Tìm khách hàng theo SĐT
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode("create")}
+                  className="flex justify-center items-center bg-blue-500 text-white py-2.5 rounded-lg hover:bg-blue-600 transition"
+                >
+                  <UserPlus className="w-5 h-5 mr-2" /> Tạo khách hàng mới
+                </button>
+              </div>
+            )}
 
-          {/* FIND MODE */}
-          {mode === "find" && (
-            <div className="bg-white p-6 rounded-xl shadow space-y-4">
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                Tìm khách hàng
-              </h3>
-              <input
-                type="text"
-                placeholder="Nhập số điện thoại..."
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                className="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-green-400"
-              />
-              <button
-                type="button"
-                onClick={handleFindCustomer}
-                className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition"
-              >
-                Tìm khách hàng
-              </button>
-              {error && <p className="text-red-500 text-sm">{error}</p>}
-            </div>
-          )}
+            {/* --- FIND MODE --- */}
+            {mode === "find" && (
+              <div className="bg-white p-6 rounded-xl shadow space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold text-gray-700">Tìm khách hàng</h3>
+                  {/* Nút quay lại */}
+                  <button
+                    type="button"
+                    onClick={() => setMode("choose")}
+                    className="text-sm text-gray-500 hover:text-gray-700 transition"
+                  >
+                    ← Quay lại
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Nhập số điện thoại..."
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  className="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-green-400"
+                />
+                <button
+                  type="button"
+                  onClick={handleFindCustomer}
+                  className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition"
+                >
+                  Tìm khách hàng
+                </button>
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+              </div>
+            )}
 
-          {/* CREATE MODE */}
-          {mode === "create" && (
-            <div className="bg-white p-6 rounded-xl shadow space-y-4">
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                Tạo khách hàng mới
-              </h3>
-              <input
-                type="text"
-                placeholder="Số điện thoại"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                className="w-full border rounded-lg p-2"
-              />
-              <input
-                name="name"
-                placeholder="Tên khách hàng"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-full border rounded-lg p-2"
-              />
-              <input
-                name="address"
-                placeholder="Địa chỉ"
-                value={formData.address}
-                onChange={handleChange}
-                className="w-full border rounded-lg p-2"
-              />
-              <button
-                type="button"
-                onClick={handleCreateCustomer}
-                className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
-              >
-                Tạo khách hàng
-              </button>
-              {error && <p className="text-red-500 text-sm">{error}</p>}
-            </div>
-          )}
+            {/* --- CREATE MODE --- */}
+            {mode === "create" && (
+              <div className="bg-white p-6 rounded-xl shadow space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold text-gray-700">
+                    Tạo khách hàng mới
+                  </h3>
+                  {/* Nút quay lại */}
+                  <button
+                    type="button"
+                    onClick={() => setMode("choose")}
+                    className="text-sm text-gray-500 hover:text-gray-700 transition"
+                  >
+                    ← Quay lại
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Số điện thoại"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  className="w-full border rounded-lg p-2"
+                />
+                <input
+                  name="name"
+                  placeholder="Tên khách hàng"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full border rounded-lg p-2"
+                />
+                <input
+                  name="address"
+                  placeholder="Địa chỉ"
+                  value={formData.address}
+                  onChange={handleChange}
+                  className="w-full border rounded-lg p-2"
+                />
+                <button
+                  type="button"
+                  onClick={handleCreateCustomer}
+                  className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
+                >
+                  Tạo khách hàng
+                </button>
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+              </div>
+            )}
 
-          {/* FOUND MODE */}
-          {mode === "found" && foundCustomer && (
-            <div className="bg-white p-6 rounded-xl shadow text-left space-y-2">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                Khách hàng:
-              </h3>
-              <p>
-                <strong>Tên:</strong> {foundCustomer.name}
-              </p>
-              <p>
-                <strong>SĐT:</strong> {foundCustomer.phone}
-              </p>
-              <p>
-                <strong>Địa chỉ:</strong> {foundCustomer.address}
-              </p>
-              <p className="text-gray-600">
-                Đã chi tiêu: ${foundCustomer.moneySpent?.toFixed(2) || 0}
-              </p>
+            {/* --- FOUND MODE --- */}
+            {mode === "found" && foundCustomer && (
+              <div className="bg-white p-6 rounded-xl shadow text-left space-y-2">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold text-gray-800">Khách hàng:</h3>
+                  <button
+                    type="button"
+                    onClick={() => setMode("choose")}
+                    className="text-sm text-gray-500 hover:text-gray-700 transition"
+                  >
+                    ← Quay lại
+                  </button>
+                </div>
+                <p>
+                  <strong>Tên:</strong> {foundCustomer.name}
+                </p>
+                <p>
+                  <strong>SĐT:</strong> {foundCustomer.phone}
+                </p>
+                <p>
+                  <strong>Địa chỉ:</strong> {foundCustomer.address}
+                </p>
+                <p className="text-gray-600">
+                  Đã chi tiêu: ${foundCustomer.moneySpent?.toFixed(2) || 0}
+                </p>
+              </div>
+            )}
+          </div>
+        </form>
+
+
+        {/* --- Order Summary --- */}
+        <div className="flex justify-center">
+          <div className="bg-gray-100 w-1/3 p-3 rounded-lg border-t mb-5">
+            <h3 className="font-medium text-gray-800 mb-3">Order Summary</h3>
+            {items.map((item) => (
+              <div
+                key={item.fruit.id}
+                className="flex justify-between items-center mb-2"
+              >
+                <span className="text-sm text-gray-600">
+                  {item.fruit.name} x {item.quantity.toFixed(3)} kg
+                </span>
+                <span className="text-sm font-medium">
+                  ${(item.fruit.price * item.quantity).toFixed(2)}
+                </span>
+              </div>
+            ))}
+            <div className="border-t pt-2 mt-2">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-gray-800">Total:</span>
+                <span className="font-bold text-green-600 text-lg">
+                  ${getTotalPrice().toFixed(2)}
+                </span>
+              </div>
             </div>
-          )}
+          </div>
         </div>
-      </form>
 
-      {/* Submit button */}
-      <div className="border-t p-6 flex justify-center">
-        <button
-          type="submit"
-          onClick={handleSubmit}
-          disabled={!totalIsValid || isProcessing}
-          className={`w-1/3 py-3 px-4 rounded-lg font-medium text-white transition-all ${
-            totalIsValid
-              ? "bg-gradient-to-r from-green-500 to-orange-500 hover:from-green-600 hover:to-orange-600"
-              : "bg-gray-300 cursor-not-allowed"
-          }`}
-        >
-          {isProcessing ? "Đang xử lý..." : `Đặt hàng - $${total.toFixed(2)}`}
-        </button>
+        {/* Submit button */}
+        <div className="border-t p-6 flex justify-center">
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={!totalIsValid || isProcessing}
+            className={`w-1/3 py-3 px-4 rounded-lg font-medium text-white transition-all ${
+              totalIsValid
+                ? "bg-gradient-to-r bg-green-500 hover:bg-green-800"
+                : "bg-gray-300 cursor-not-allowed"
+            }`}
+          >
+            {isProcessing ? "Đang xử lý..." : `Đặt hàng - $${total.toFixed(2)}`}
+          </button>
+        </div>
+
       </div>
     </div>
   );

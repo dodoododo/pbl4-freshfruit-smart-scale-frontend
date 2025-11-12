@@ -207,7 +207,7 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
                       <span className="text-lg font-semibold text-gray-800">Total:</span>
                       <span className="text-2xl font-bold text-green-600">{getTotalPrice().toLocaleString()} $</span>
                     </div>
-                    <button onClick={handleCheckout} className="w-full bg-gradient-to-r from-green-500 to-orange-500 text-white py-3 px-4 rounded-lg font-medium hover:from-green-600 hover:to-orange-600 transition-all">
+                    <button onClick={handleCheckout} className="w-full bg-gradient-to-r bg-green-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-800 transition-all">
                       Check Out
                     </button>
                   </div>

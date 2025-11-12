@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { UserPlus, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext.tsx';
 
 interface SignupProps {
   onToggleMode: () => void;
@@ -9,19 +8,25 @@ interface SignupProps {
 const Signup: React.FC<SignupProps> = ({ onToggleMode }) => {
   const [formData, setFormData] = useState({
     name: '',
+    username: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    phone: '',
+    address: '',
+    birth: '',
+    gender: true, // true = male, false = female
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { signup } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
+    setSuccess('');
+    setIsLoading(true);
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
@@ -35,21 +40,60 @@ const Signup: React.FC<SignupProps> = ({ onToggleMode }) => {
       return;
     }
 
-    setTimeout(() => {
-      const success = signup(formData.email, formData.password, formData.name);
-      
-      if (!success) {
-        setError('Email already exists');
+    try {
+      const response = await fetch('https://yoursubdomain.loca.lt/user/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          accept: 'application/json'
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          name: formData.name,
+          phone: formData.phone,
+          address: formData.address,
+          birth: formData.birth || '2025-11-12',
+          gender: formData.gender,
+          username: formData.username,
+          role: false,   // hoặc false tùy theo mặc định bạn muốn
+          valid: true
+        })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || 'Failed to register');
       }
+
+      const data = await response.json();
+      console.log('Register success:', data);
+      setSuccess('Account created successfully!');
+      setTimeout(() => onToggleMode(), 1500);
+      setFormData({
+        name: '',
+        username: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        phone: '',
+        address: '',
+        birth: '',
+        gender: true
+      });
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong');
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value, type } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? e.target.checked : value
+    }));
   };
 
   return (
@@ -63,86 +107,104 @@ const Signup: React.FC<SignupProps> = ({ onToggleMode }) => {
           <p className="text-gray-600">Create your Fresh Fruit Market account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Full Name
-            </label>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="Full name"
+            className="w-full px-4 py-3 border rounded-lg"
+            required
+          />
+          <input
+            type="text"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            placeholder="Username"
+            className="w-full px-4 py-3 border rounded-lg"
+            required
+          />
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="Email"
+            className="w-full px-4 py-3 border rounded-lg"
+            required
+          />
+          <input
+            type="text"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            placeholder="Phone number"
+            className="w-full px-4 py-3 border rounded-lg"
+          />
+          <input
+            type="text"
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+            placeholder="Address"
+            className="w-full px-4 py-3 border rounded-lg"
+          />
+          <input
+            type="date"
+            name="birth"
+            value={formData.birth}
+            onChange={handleChange}
+            className="w-full px-4 py-3 border rounded-lg"
+          />
+
+          <div className="flex items-center space-x-3">
+            <label className="text-gray-700">Male</label>
             <input
-              type="text"
-              name="name"
-              value={formData.name}
+              type="checkbox"
+              name="gender"
+              checked={formData.gender}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-              placeholder="Enter your full name"
-              required
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
+          <div className="relative">
             <input
-              type="email"
-              name="email"
-              value={formData.email}
+              type={showPassword ? 'text' : 'password'}
+              name="password"
+              value={formData.password}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-              placeholder="Enter your email"
+              placeholder="Password"
+              className="w-full px-4 py-3 border rounded-lg pr-10"
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all pr-12"
-                placeholder="Create a password"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
+          <input
+            type="password"
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            placeholder="Confirm password"
+            className="w-full px-4 py-3 border rounded-lg"
+            required
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-              placeholder="Confirm your password"
-              required
-            />
-          </div>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-              {error}
-            </div>
-          )}
+          {error && <div className="text-red-600 text-sm">{error}</div>}
+          {success && <div className="text-green-600 text-sm">{success}</div>}
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-gradient-to-r from-green-500 to-orange-500 text-white py-3 px-4 rounded-lg font-medium hover:from-green-600 hover:to-orange-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 transition-all"
+            className="w-full bg-gradient-to-r from-green-500 to-orange-500 text-white py-3 rounded-lg hover:from-green-600 hover:to-orange-600 transition-all"
           >
             {isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
@@ -151,10 +213,7 @@ const Signup: React.FC<SignupProps> = ({ onToggleMode }) => {
         <div className="mt-6 text-center">
           <p className="text-gray-600">
             Already have an account?{' '}
-            <button
-              onClick={onToggleMode}
-              className="text-green-600 hover:text-green-700 font-medium"
-            >
+            <button onClick={onToggleMode} className="text-green-600 hover:text-green-700 font-medium">
               Sign in
             </button>
           </p>

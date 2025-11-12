@@ -272,7 +272,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
           {!showAddForm && !editingFruit && (
             <button
               onClick={() => setShowAddForm(true)}
-              className="bg-gradient-to-r from-green-500 to-orange-500 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-orange-600 flex items-center space-x-2"
+              className="bg-gradient-to-r bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-800 flex items-center space-x-2"
             >
               <Plus className="w-4 h-4" />
               <span>Add Fruit</span>
