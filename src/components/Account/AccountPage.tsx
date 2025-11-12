@@ -81,19 +81,23 @@ const AccountPage: React.FC<AccountPageProps> = ({ onBack }) => {
                 <div>
                     <label className="text-sm font-medium">Gender</label>
                     <Select
-                        value={formData.gender}
-                        onValueChange={(value) => setFormData({ ...formData, gender: value })}
+                      value={formData.gender ? "Female" : "Male"} // boolean -> string
+                      onValueChange={(value) =>
+                        setFormData({
+                          ...formData,
+                          // gender: value === "Female", // string -> boolean
+                        })
+                      }
                     >
-                        <SelectTrigger className="w-full mt-1">
-                            <SelectValue placeholder="Select gender" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Male">Male</SelectItem>
-                            <SelectItem value="Female">Female</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                            <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
-                        </SelectContent>
+                      <SelectTrigger className="w-full mt-1">
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Male">Male</SelectItem>
+                        <SelectItem value="Female">Female</SelectItem>
+                      </SelectContent>
                     </Select>
+
                 </div>
 
                 <div>

@@ -72,3 +72,11 @@ export interface Bill {
   total_cost: number;
   bill_details: BillDetail[];
 }
+
+export interface Customer {
+  cus_id: number;
+  name: string;
+  phone: string;
+  address?: string;
+  moneySpent: number;
+}

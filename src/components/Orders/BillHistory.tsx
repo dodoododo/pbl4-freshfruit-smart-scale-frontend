@@ -27,14 +27,14 @@ const BillHistory: React.FC = () => {
   }, []);
 
   const getStatusIcon = (bill: Bill) => {
-    if (bill.total_cost === 0) return <Clock className="w-5 h-5 text-yellow-500" />;
-    if (bill.total_cost > 0 && bill.total_cost < 100) return <Package className="w-5 h-5 text-blue-500" />;
+    // if (bill.total_cost === 0) return <Clock className="w-5 h-5 text-yellow-500" />;
+    // if (bill.total_cost > 0 && bill.total_cost < 100) return <Package className="w-5 h-5 text-blue-500" />;
     return <CheckCircle className="w-5 h-5 text-green-500" />;
   };
 
   const getStatusLabel = (bill: Bill) => {
-    if (bill.total_cost === 0) return 'Pending';
-    if (bill.total_cost > 0 && bill.total_cost < 100) return 'Processing';
+    // if (bill.total_cost === 0) return 'Pending';
+    // if (bill.total_cost > 0 && bill.total_cost < 100) return 'Processing';
     return 'Completed';
   };
 
@@ -88,7 +88,7 @@ const BillHistory: React.FC = () => {
                 {getStatusIcon(bill)}
                 <div>
                   <h3 className="font-semibold text-gray-800">Hóa đơn #{bill.bill_id}</h3>
-                  <p className="text-sm text-gray-600">{new Date(new Date(bill.date).getTime() + 6 * 60 * 60 * 1000).toLocaleString('vi-VN')}</p>
+                  <p className="text-sm text-gray-600">{new Date(new Date(bill.date).getTime() + 7 * 60 * 60 * 1000).toLocaleString('vi-VN')}</p>
                 </div>
               </div>
               <div className="text-right">

@@ -63,8 +63,9 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
       try {
         const res = await fetch(`${BASE_URL}/files/latest`);
         const data = await res.json();
+        console.log("Latest files data:", data);
         if (data.status !== "success" || !data.files) return;
-
+        
         const filesArray = Object.entries(data.files).map(([name, file]: [string, any]) => ({
           fruitName: name,
           ...file,
@@ -72,6 +73,7 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
 
         filesArray.forEach((fileObj) => {
           const foundFruit = fruits.find((f) => f.name === fileObj.fruitName);
+          console.log("Matching fruit for file:", fileObj.fruitName, foundFruit);
           if (!foundFruit) return;
 
           // Thêm vào cart nếu chưa có
@@ -176,7 +178,7 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
                             <h3 className="font-medium text-gray-800">{item.fruit.name}</h3>
                             <p className="text-green-600 font-semibold">{item.fruit.price.toLocaleString()}$ / kg</p>
                             {identifiedImages[item.fruit.id]?.map((imgUrl, idx) => (
-                              <img key={idx} src={imgUrl} alt={`Identified ${item.fruit.name}`} className="w-20 h-20 object-cover rounded mt-2" />
+                              <img key={idx} src={imgUrl} className="w-20 h-20 object-cover rounded mt-2" />
                             ))}
                           </div>
 
@@ -207,7 +209,7 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
                       <span className="text-lg font-semibold text-gray-800">Total:</span>
                       <span className="text-2xl font-bold text-green-600">{getTotalPrice().toLocaleString()} $</span>
                     </div>
-                    <button onClick={handleCheckout} className="w-full bg-gradient-to-r from-green-500 to-orange-500 text-white py-3 px-4 rounded-lg font-medium hover:from-green-600 hover:to-orange-600 transition-all">
+                    <button onClick={handleCheckout} className="w-full bg-gradient-to-r bg-green-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-800 transition-all">
                       Check Out
                     </button>
                   </div>

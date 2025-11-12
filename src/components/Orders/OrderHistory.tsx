@@ -14,7 +14,7 @@ const OrderHistory: React.FC = () => {
       const userOrders = allOrders.filter(order => order.userId === user?.id);
       setOrders(userOrders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     }
-  }, [user?.id]);
+  }, [user?.id]);    
 
   const getStatusIcon = (status: string) => {
     switch (status) {
