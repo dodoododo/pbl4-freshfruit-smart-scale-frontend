@@ -20,10 +20,11 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
   const [loadingFruits, setLoadingFruits] = useState(true);
   const [weights, setWeights] = useState<Record<string, number>>({});
   const [identifiedImages, setIdentifiedImages] = useState<Record<string, string[]>>({});
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const identifiedRef = useRef<Record<string, string[]>>({});
 
-  // Load fruits và weight ban đầu khi mở cart
+  // Load fruits
   useEffect(() => {
     if (!isOpen) return;
 
@@ -36,17 +37,14 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
         const fruitsData: Fruit[] = await fruitsRes.json();
         setFruits(fruitsData);
 
-        // 2. Weight ban đầu
-        const weightRes = await fetch(`${BASE_URL}/hardware/get_weight`);
-        const weightData = await weightRes.json();
+        // 2. Initialize weights (default 0)
         const initialWeights: Record<string, number> = {};
         fruitsData.forEach((f) => {
-          initialWeights[f.id] = weightData.weight ? parseFloat(weightData.weight) : 0;
+          initialWeights[f.id] = 0;
         });
         setWeights(initialWeights);
-
       } catch (err) {
-        console.error("Error fetching fruits or weight:", err);
+        console.error("Error fetching fruits:", err);
       } finally {
         setLoadingFruits(false);
       }
@@ -57,46 +55,47 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
 
   // Fetch files/latest + polling
   useEffect(() => {
-    if (!isOpen || fruits.length === 0) return;
+  if (!isOpen || fruits.length === 0) return;
 
-    const fetchFiles = async () => {
-      try {
-        const res = await fetch(`${BASE_URL}/files/latest`);
-        const data = await res.json();
-        console.log("Latest files data:", data);
-        if (data.status !== "success" || !data.files) return;
-        
-        const filesArray = Object.entries(data.files).map(([name, file]: [string, any]) => ({
-          fruitName: name,
-          ...file,
-        }));
+  const fetchFiles = async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/files/latest`);
+      const data = await res.json();
+      if (data.status !== "success" || !data.files) return;
 
-        filesArray.forEach((fileObj) => {
-          const foundFruit = fruits.find((f) => f.name === fileObj.fruitName);
-          console.log("Matching fruit for file:", fileObj.fruitName, foundFruit);
-          if (!foundFruit) return;
+      // Duyệt từng fruit
+      Object.entries(data.files).forEach(([fruitName, fileObj]: [string, any]) => {
+        const foundFruit = fruits.find((f) => f.name === fruitName);
+        if (!foundFruit) return;
 
-          // Thêm vào cart nếu chưa có
-          if (!items.some((item) => item.fruit.id === foundFruit.id)) addToCart(foundFruit);
+        // Add to cart nếu chưa có
+        if (!items.some((item) => item.fruit.id === foundFruit.id)) {
+          addToCart(foundFruit);
+        }
 
-          // Cập nhật ảnh nhận diện
-          const prev = identifiedRef.current[foundFruit.id] || [];
-          if (!prev.includes(fileObj.image_url)) {
-            identifiedRef.current[foundFruit.id] = [...prev, fileObj.image_url];
-            setIdentifiedImages({ ...identifiedRef.current });
-          }
-        });
-      } catch (err) {
-        console.error("Error fetching latest files:", err);
-      }
-    };
+        // 1. Update image mới nhất
+        identifiedRef.current[foundFruit.id] = [fileObj.image_url];
+        setIdentifiedImages({ ...identifiedRef.current });
 
-    fetchFiles();
-    const interval = setInterval(fetchFiles, 1000);
-    return () => clearInterval(interval);
-  }, [isOpen, fruits, items]);
+        // 2. Update weight từ file
+        const detectedWeight = parseFloat(fileObj.weight) || 0;
+        setWeights((prev) => ({ ...prev, [foundFruit.id]: detectedWeight }));
+
+        // 3. Cập nhật cart quantity
+        updateQuantity(foundFruit.id, detectedWeight);
+      });
+    } catch (err) {
+      console.error("Error fetching latest files:", err);
+    }
+  };
+
+  fetchFiles();
+  const interval = setInterval(fetchFiles, 1000);
+  return () => clearInterval(interval);
+}, [isOpen, fruits, items]);
 
   const handleCheckout = () => setShowCheckout(true);
+
   const handleCheckoutComplete = () => {
     clearCart();
     setShowCheckout(false);
@@ -108,23 +107,17 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
     updateQuantity(fruitId, newWeight);
   };
 
-  const handleWeigh = async (fruitId: string) => {
-    try {
-      const res = await fetch(`${BASE_URL}/hardware/get_weight`);
-      const data = await res.json();
-      handleWeightChange(fruitId, parseFloat(data.weight));
-    } catch (err) {
-      console.error("Error fetching weight:", err);
-    }
-  };
-
   if (!isOpen) return null;
 
   return (
     <div className="w-full fixed inset-0 z-50 overflow-hidden">
+
+      {/* BACKDROP */}
       <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose} />
+
       <div className="absolute right-0 top-0 h-full w-full bg-white shadow-xl">
         <div className="flex flex-col h-full">
+
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b">
             <h2 className="text-xl font-semibold text-gray-800 flex items-center">
@@ -139,12 +132,12 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
             </button>
           </div>
 
-          {/* Main content */}
           {showCheckout ? (
             <CheckoutForm onComplete={handleCheckoutComplete} onBack={() => setShowCheckout(false)} />
           ) : (
             <div className="flex flex-1 overflow-hidden">
-              {/* Left: Fruits list */}
+
+              {/* LEFT: Fruits list */}
               <div className="w-1/3 overflow-y-auto p-6 border-r">
                 {loadingFruits ? (
                   <div className="text-center py-12 text-gray-500">Loading fruits...</div>
@@ -160,7 +153,7 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
                 )}
               </div>
 
-              {/* Right: Cart Items */}
+              {/* RIGHT: Cart Items */}
               <div className="w-2/3 flex flex-col">
                 <div className="flex-1 overflow-y-auto p-6">
                   {items.length === 0 ? (
@@ -171,29 +164,52 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
                   ) : (
                     <div className="space-y-4">
                       {items.map((item, index) => (
-                        <div key={item.fruit.id} className="flex items-center space-x-4 bg-gray-50 p-4 rounded-lg">
+                        <div
+                          key={item.fruit.id}
+                          className="flex items-center space-x-4 bg-gray-50 p-4 rounded-lg"
+                        >
                           <span className="text-gray-700 font-medium w-6">{index + 1}</span>
-                          <img src={item.fruit.image} alt={item.fruit.name} className="w-16 h-16 object-cover rounded-lg" />
+                          <img
+                            src={item.fruit.image}
+                            alt={item.fruit.name}
+                            className="w-16 h-16 object-cover rounded-lg"
+                          />
+
                           <div className="flex-1">
                             <h3 className="font-medium text-gray-800">{item.fruit.name}</h3>
-                            <p className="text-green-600 font-semibold">{item.fruit.price.toLocaleString()}$ / kg</p>
+                            <p className="text-green-600 font-semibold">
+                              {item.fruit.price.toLocaleString()}$ / kg
+                            </p>
+
+                            {/* Identified Image (click to preview) */}
                             {identifiedImages[item.fruit.id]?.map((imgUrl, idx) => (
-                              <img key={idx} src={imgUrl} className="w-20 h-20 object-cover rounded mt-2" />
+                              <img
+                                key={idx}
+                                src={imgUrl}
+                                className="w-20 h-20 object-cover rounded mt-2 cursor-pointer transition-transform hover:scale-105"
+                                onClick={() => setPreviewImage(imgUrl)}
+                              />
                             ))}
                           </div>
 
+                          {/* WEIGHT INPUT + REMOVE */}
                           <div className="flex items-center space-x-2">
                             <input
                               type="number"
-                              step="1"
+                              step="0.01"
                               min="0"
-                              value={weights[item.fruit.id] ?? 0} // 0 vẫn giữ nguyên
-                              onChange={(e) => handleWeightChange(item.fruit.id, parseFloat(e.target.value) || 0)}
+                              value={weights[item.fruit.id] ?? 0}
+                              onChange={(e) =>
+                                handleWeightChange(item.fruit.id, parseFloat(e.target.value) || 0)
+                              }
                               className="w-20 border rounded px-2 py-1 text-right"
                             />
                             <span className="text-gray-600">kg</span>
-                            <button onClick={() => handleWeigh(item.fruit.id)} className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">Weight</button>
-                            <button onClick={() => removeFromCart(item.fruit.id)} className="p-1 text-red-500 hover:bg-red-50 rounded ml-2">
+
+                            <button
+                              onClick={() => removeFromCart(item.fruit.id)}
+                              className="p-1 text-red-500 hover:bg-red-50 rounded ml-2"
+                            >
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
@@ -207,9 +223,14 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
                   <div className="border-t p-6 bg-gray-50">
                     <div className="flex justify-between items-center mb-4">
                       <span className="text-lg font-semibold text-gray-800">Total:</span>
-                      <span className="text-2xl font-bold text-green-600">{getTotalPrice().toLocaleString()} $</span>
+                      <span className="text-2xl font-bold text-green-600">
+                        {getTotalPrice().toLocaleString()} $
+                      </span>
                     </div>
-                    <button onClick={handleCheckout} className="w-full bg-gradient-to-r bg-green-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-800 transition-all">
+                    <button
+                      onClick={handleCheckout}
+                      className="w-full bg-green-500 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-800 transition-all"
+                    >
                       Check Out
                     </button>
                   </div>
@@ -219,6 +240,35 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
           )}
         </div>
       </div>
+
+      {/* IMAGE POPUP FULLSCREEN + ANIMATION */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[999] animate-fadeIn"
+          onClick={() => setPreviewImage(null)}
+        >
+          <img
+            src={previewImage}
+            className="max-w-[90%] max-h-[90%] rounded-lg shadow-lg animate-zoomIn"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+
+      {/* Animation styles */}
+      <style>{`
+        @keyframes zoomIn {
+          from { transform: scale(0.6); opacity: 0; }
+          to   { transform: scale(1); opacity: 1; }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        .animate-zoomIn { animation: zoomIn 0.25s ease-out; }
+        .animate-fadeIn { animation: fadeIn 0.25s ease-out; }
+      `}</style>
+
     </div>
   );
 };
