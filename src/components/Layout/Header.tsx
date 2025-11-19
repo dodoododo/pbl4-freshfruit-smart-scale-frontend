@@ -2,8 +2,9 @@ import React from 'react';
 import { ShoppingCart, User, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import Logo from './Logo';
 
-type View = 'products' | 'orders' | 'bills' | 'billHistory' | 'admin' | 'account' | 'employees';
+export type View = 'products' | 'bills' | 'billHistory' | 'admin' | 'account' | 'employees';
 
 interface HeaderProps {
   onToggleCart: () => void;
@@ -21,14 +22,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleCart, onNavigateToAdmin, curren
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <div className="flex items-center">
-            <div
-              className="text-2xl font-bold bg-gradient-to-r from-green-600 to-orange-500 bg-clip-text text-transparent cursor-pointer"
-              onClick={() => onViewChange('products')}
-            >
-              🍎 Fresh Fruit Market
-            </div>
-          </div>
+          <Logo onViewChange={onViewChange} />
 
           {/* Navigation */}
           <nav className="hidden md:flex space-x-8">
@@ -42,7 +36,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleCart, onNavigateToAdmin, curren
             >
               Products
             </button>
-
+{/* 
             <button
               onClick={() => onViewChange('orders')}
               className={`px-3 py-2 text-sm font-medium transition-colors ${
@@ -52,7 +46,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleCart, onNavigateToAdmin, curren
               }`}
             >
               Orders
-            </button>
+            </button> */}
 
             <button
               onClick={() => onViewChange('bills')}

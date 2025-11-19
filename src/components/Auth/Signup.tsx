@@ -100,7 +100,7 @@ const Signup: React.FC<SignupProps> = ({ onToggleMode }) => {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-orange-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-500 to-orange-500 rounded-full mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r bg-green-500 rounded-full mb-4">
             <UserPlus className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Join Us Today</h1>
@@ -204,7 +204,7 @@ const Signup: React.FC<SignupProps> = ({ onToggleMode }) => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-gradient-to-r from-green-500 to-orange-500 text-white py-3 rounded-lg hover:from-green-600 hover:to-orange-600 transition-all"
+            className="w-full bg-gradient-to-r bg-green-500  text-white py-3 rounded-lg hover:bg-green-800 transition-all"
           >
             {isLoading ? 'Creating Account...' : 'Create Account'}
           </button>
