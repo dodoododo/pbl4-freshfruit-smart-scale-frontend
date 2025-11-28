@@ -1,44 +1,79 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
 import {
-  LineChart, Line, PieChart, Pie, Tooltip, Legend, CartesianGrid, XAxis, YAxis, ResponsiveContainer, BarChart, Bar, Cell
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
 } from "recharts";
 
-interface Bill {
-  id: string;
-  employee: string;
-  total: number;
-  time: string;
-  items: { fruit: string; quantity: number; price: number }[];
+interface BillDetail {
+  detail_id: number;
+  fruit_id: number;
+  fruit_name: string;
+  weight: number;
+  price: number;
 }
 
-const dummyBills: Bill[] = [
-  {
-    id: "BILL001",
-    employee: "Alice",
-    total: 45.5,
-    time: "2025-10-12T10:30:00",
-    items: [
-      { fruit: "Apple", quantity: 3, price: 10 },
-      { fruit: "Mango", quantity: 2, price: 12.5 },
-    ],
-  },
-  {
-    id: "BILL002",
-    employee: "Bob",
-    total: 80,
-    time: "2025-10-12T12:10:00",
-    items: [
-      { fruit: "Banana", quantity: 10, price: 5 },
-      { fruit: "Apple", quantity: 5, price: 8 },
-    ],
-  },
-];
+export interface Bill {
+  bill_id: number;
+  user_id: number; // đúng API
+  date: string;
+  cus_id: number;
+  total_cost: number;
+  bill_details: BillDetail[];
+}
 
+interface RevenueDay {
+  day: string;
+  total_revenue: number;
+}
+
+interface RevenueMonth {
+  year: number;
+  month: number;
+  total_revenue: number;
+}
+
+interface TopFruit {
+  name: string;
+  total_weight: number;
+  revenue: number;
+}
+
+interface RevenueByFruit {
+  name: string;
+  total_revenue: number;
+}
+
+interface EmployeeRevenue {
+  employee: string;
+  total_sales: number;
+}
+
+interface UserProfile {
+  id: number;
+  email: string;
+  name: string;
+  phone: string;
+  address: string;
+  birth: string;
+  gender: boolean;
+  username: string;
+  role: boolean;
+  valid: boolean;
+}
+
+const API = "https://yoursubdomain.loca.lt";
 
 const generateColors = (count: number): string[] => {
   const colors: string[] = [];
@@ -49,209 +84,183 @@ const generateColors = (count: number): string[] => {
   return colors;
 };
 
-const BillsDashboard: React.FC = () => {
-  const [bills, setBills] = useState(dummyBills);
-  const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [viewBill, setViewBill] = useState<Bill | null>(null);
+const BillDashboard: React.FC = () => {
+  const [revenueDay, setRevenueDay] = useState<RevenueDay[]>([]);
+  const [revenueMonth, setRevenueMonth] = useState<RevenueMonth[]>([]);
+  const [topFruits, setTopFruits] = useState<TopFruit[]>([]);
+  const [revenueByFruits, setRevenueByFruits] = useState<RevenueByFruit[]>([]);
+  const [bills, setBills] = useState<Bill[]>([]);
+  const [profiles, setProfiles] = useState<UserProfile[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredBills = bills.filter((bill) => {
-    return (
-      (!selectedEmployee || bill.employee === selectedEmployee) &&
-      (!selectedDate || bill.time.startsWith(selectedDate))
-    );
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [
+          dayRes,
+          monthRes,
+          topFruitsRes,
+          revenueByFruitsRes,
+          billsRes,
+          profilesRes,
+        ] = await Promise.all([
+          fetch(`${API}/statistics/revenue/day`).then((r) => r.json()) as Promise<RevenueDay[]>,
+          fetch(`${API}/statistics/revenue/month`).then((r) => r.json()) as Promise<RevenueMonth[]>,
+          fetch(`${API}/statistics/top-fruits?limit=5`).then((r) => r.json()) as Promise<TopFruit[]>,
+          fetch(`${API}/statistics/revenue/by-fruits`).then((r) => r.json()) as Promise<RevenueByFruit[]>,
+          fetch(`${API}/ViewAllBill`).then((r) => r.json()) as Promise<Bill[]>,
+          fetch(`${API}/user/profiles`).then((r) => r.json()) as Promise<UserProfile[]>,
+        ]);
+
+        setRevenueDay(dayRes);
+        setRevenueMonth(monthRes);
+        setTopFruits(topFruitsRes);
+        setRevenueByFruits(revenueByFruitsRes);
+        setBills(billsRes);
+        setProfiles(profilesRes);
+      } catch (err) {
+        console.error("Failed to fetch data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Color palettes
+  const topFruitColors = generateColors(topFruits.length);
+  const revenueFruitColors = generateColors(revenueByFruits.length);
+
+  // Mapping id -> name
+  const profileMap: Record<number, string> = {};
+  profiles.forEach((p) => {
+    profileMap[p.id] = p.name;
   });
 
-  const revenueData = [
-    { date: "2025-10-10", revenue: 200, orders: 12 },
-    { date: "2025-10-11", revenue: 350, orders: 18 },
-    { date: "2025-10-12", revenue: 400, orders: 22 },
-  ];
+  // Doanh số nhân viên
+  const employeeSalesMap: Record<string, number> = {};
+  bills.forEach((bill) => {
+    const employeeName = profileMap[bill.user_id] || `ID ${bill.user_id}`;
+    if (!employeeSalesMap[employeeName]) employeeSalesMap[employeeName] = 0;
+    employeeSalesMap[employeeName] += bill.total_cost;
+  });
 
-  const employeeData = [
-    { name: "Alice", sales: 120 },
-    { name: "Bob", sales: 180 },
-    { name: "Eve", sales: 100 },
-  ];
+  const employeeSales: EmployeeRevenue[] = Object.entries(employeeSalesMap)
+    .map(([employee, total_sales]) => ({ employee, total_sales }))
+    .sort((a, b) => b.total_sales - a.total_sales);
 
-  const fruitData = [
-    { name: "Apple", sold: 50 },
-    { name: "Banana", sold: 70 },
-    { name: "Mango", sold: 30 },
-    { name: "Orange", sold: 20 },
-  ];
+  const employeeColors = generateColors(employeeSales.length);
 
-  const employeeColors = generateColors(employeeData.length);
-  const fruitColors = generateColors(fruitData.length);
+  if (loading) {
+    return <p className="text-center mt-10">Đang tải dữ liệu thống kê...</p>;
+  }
+
   return (
-    <div className="p-6 space-y-6">
-      {/* Filters */}
-      <Card>
-        <CardContent className="flex flex-wrap gap-4 items-center justify-between">
-          <Input
-            type="date"
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="w-48"
-          />
-          <Select onValueChange={(val) => setSelectedEmployee(val)}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Filter by employee" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Alice">Alice</SelectItem>
-              <SelectItem value="Bob">Bob</SelectItem>
-              <SelectItem value="Eve">Eve</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" onClick={() => { setSelectedEmployee(null); setSelectedDate(null); }}>
-            Reset Filters
-          </Button>
-        </CardContent>
-      </Card>
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+      <h1 className="text-3xl font-bold mb-4">Thống kê bán hàng</h1>
 
-      {/* Bill List */}
+      {/* Doanh thu theo ngày */}
       <Card>
         <CardContent>
-          <h2 className="text-lg font-semibold mb-3">Bills</h2>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left border-b">
-                <th className="py-2">Bill ID</th>
-                <th>Employee</th>
-                <th>Total ($)</th>
-                <th>Time</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredBills.map((bill) => (
-                <tr key={bill.id} className="border-b hover:bg-gray-50">
-                  <td className="py-2">{bill.id}</td>
-                  <td>{bill.employee}</td>
-                  <td>{bill.total}</td>
-                  <td>{new Date(bill.time).toLocaleString()}</td>
-                  <td>
-                    <Button size="sm" onClick={() => setViewBill(bill)}>
-                      View Details
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <h2 className="font-semibold mb-2">Doanh thu theo ngày</h2>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={revenueDay}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="day" />
+              <YAxis />
+              <Tooltip formatter={(v: number) => `$${v.toFixed(2)}`} />
+              <Legend />
+              <Line type="monotone" dataKey="total_revenue" name="Doanh thu" stroke="#22c55e" />
+            </LineChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
 
-      {/* Graphs Section */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Revenue / Orders Line Graph */}
-        <Card>
-          <CardContent>
-            <h3 className="text-md font-semibold mb-2">Revenue & Orders</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="revenue" stroke="#22c55e" name="Revenue ($)" />
-                <Line type="monotone" dataKey="orders" stroke="#f97316" name="Orders" />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {/* Doanh thu theo tháng */}
+      <Card>
+        <CardContent>
+          <h2 className="font-semibold mb-2">Doanh thu theo tháng</h2>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={revenueMonth}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip formatter={(v: number) => `$${v.toFixed(2)}`} />
+              <Legend />
+              <Line type="monotone" dataKey="total_revenue" name="Doanh thu" stroke="#f97316" />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
-        {/* Employee Sales Pie Chart */}
-        <Card>
-          <CardContent>
-            <h3 className="text-md font-semibold mb-2">Employee Sales Share</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  dataKey="sales"
-                  data={employeeData}
-                  outerRadius={80}
-                  label={({ name }) => name}
-                >
-                  {/* Assign different colors to each slice */}
-                  {employeeData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={employeeColors[index]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        {/* Fruit Sales Bar Chart */}
-        <Card className="md:col-span-2">
-          <CardContent>
-            <h3 className="text-md font-semibold mb-2">Top Selling Fruits</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={fruitData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="sold">
-                  {fruitData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={fruitColors[index]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Bill Detail Modal */}
-      {viewBill && (
-        <motion.div
-          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
-          onClick={() => setViewBill(null)}
-        >
-          <motion.div
-            className="bg-white rounded-xl p-6 max-w-md w-full"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-lg font-semibold mb-2">
-              Bill #{viewBill.id} — {viewBill.employee}
-            </h2>
-            <p className="text-sm text-gray-500 mb-3">
-              {new Date(viewBill.time).toLocaleString()}
-            </p>
-            <table className="w-full text-sm mb-3">
-              <thead>
-                <tr className="text-left border-b">
-                  <th>Fruit</th>
-                  <th>Qty</th>
-                  <th>Price</th>
-                </tr>
-              </thead>
-              <tbody>
-                {viewBill.items.map((item, i) => (
-                  <tr key={i} className="border-b">
-                    <td>{item.fruit}</td>
-                    <td>{item.quantity}</td>
-                    <td>${item.price}</td>
-                  </tr>
+      {/* Top 5 sản phẩm bán chạy */}
+      <Card>
+        <CardContent>
+          <h2 className="font-semibold mb-2">Top 5 sản phẩm bán chạy</h2>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={topFruits.map((f) => ({ name: f.name, value: f.revenue }))}
+                dataKey="value"
+                nameKey="name"
+                outerRadius={80}
+                label={(entry) => entry.name}
+              >
+                {topFruits.map((_, index) => (
+                  <Cell key={index} fill={topFruitColors[index]} />
                 ))}
-              </tbody>
-            </table>
-            <div className="text-right font-semibold">
-              Total: ${viewBill.total.toFixed(2)}
-            </div>
-            <Button className="mt-3 w-full" onClick={() => setViewBill(null)}>
-              Close
-            </Button>
-          </motion.div>
-        </motion.div>
-      )}
+              </Pie>
+              <Tooltip formatter={(value: number, name: string) => [`$${value.toFixed(2)}`, name]} />
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Doanh thu theo sản phẩm */}
+      <Card>
+        <CardContent>
+          <h2 className="font-semibold mb-2">Doanh thu theo sản phẩm</h2>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={revenueByFruits}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip formatter={(v: number) => `$${v.toFixed(2)}`} />
+              <Bar dataKey="total_revenue" name="Doanh thu">
+                {revenueByFruits.map((_, index) => (
+                  <Cell key={index} fill={revenueFruitColors[index]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Nhân viên bán hàng tốt nhất */}
+      <Card>
+        <CardContent>
+          <h2 className="font-semibold mb-2">Nhân viên bán hàng tốt nhất</h2>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={employeeSales.map((e) => ({ name: e.employee, value: e.total_sales }))}
+                dataKey="value"
+                nameKey="name"
+                outerRadius={80}
+                label={(entry) => entry.name}
+              >
+                {employeeSales.map((_, index) => (
+                  <Cell key={index} fill={employeeColors[index]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value: number, name: string) => [`$${value.toFixed(2)}`, name]} />
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
     </div>
   );
 };
 
-export default BillsDashboard;
+export default BillDashboard;
