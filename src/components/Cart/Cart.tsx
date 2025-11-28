@@ -53,35 +53,35 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
     fetchAll();
   }, [isOpen]);
 
-  // Fetch files/latest + polling
-  useEffect(() => {
+// Fetch files/latest + polling
+useEffect(() => {
+  // Nếu đóng cart hoặc chưa có fruits → ngừng
   if (!isOpen || fruits.length === 0) return;
+
+  // ⛔ NGỪNG POLLING khi đang checkout
+  if (showCheckout) return;
 
   const fetchFiles = async () => {
     try {
       const res = await fetch(`${BASE_URL}/files/latest`);
       const data = await res.json();
+      console.log("Latest files data:", data);
       if (data.status !== "success" || !data.files) return;
 
-      // Duyệt từng fruit
       Object.entries(data.files).forEach(([fruitName, fileObj]: [string, any]) => {
         const foundFruit = fruits.find((f) => f.name === fruitName);
         if (!foundFruit) return;
 
-        // Add to cart nếu chưa có
         if (!items.some((item) => item.fruit.id === foundFruit.id)) {
           addToCart(foundFruit);
         }
 
-        // 1. Update image mới nhất
         identifiedRef.current[foundFruit.id] = [fileObj.image_url];
         setIdentifiedImages({ ...identifiedRef.current });
 
-        // 2. Update weight từ file
         const detectedWeight = parseFloat(fileObj.weight) || 0;
         setWeights((prev) => ({ ...prev, [foundFruit.id]: detectedWeight }));
 
-        // 3. Cập nhật cart quantity
         updateQuantity(foundFruit.id, detectedWeight);
       });
     } catch (err) {
@@ -90,9 +90,10 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
   };
 
   fetchFiles();
-  const interval = setInterval(fetchFiles, 1000);
+  const interval = setInterval(fetchFiles, 3000);
+
   return () => clearInterval(interval);
-}, [isOpen, fruits, items]);
+}, [isOpen, fruits, items, showCheckout]);    // 👈 thêm showCheckout
 
   const handleCheckout = () => setShowCheckout(true);
 
