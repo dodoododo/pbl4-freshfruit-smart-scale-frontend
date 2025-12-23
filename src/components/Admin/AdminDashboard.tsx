@@ -296,9 +296,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                     Product
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Price
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -324,9 +321,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
                           <div className="text-sm text-gray-500 max-w-xs truncate">{fruit.description}</div>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {fruit.category}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
                       ${fruit.price.toFixed(2)}

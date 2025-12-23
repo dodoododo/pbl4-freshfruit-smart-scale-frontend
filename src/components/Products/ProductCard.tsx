@@ -3,6 +3,7 @@ import { StoreIcon, Star } from 'lucide-react';
 import type { Fruit } from '../../types';
 import { useCart } from '../../context/CartContext';
 
+
 interface ProductCardProps {
   fruit: Fruit;
 }
@@ -37,8 +38,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ fruit }) => {
             <span className="text-sm text-gray-600 ml-1">4.8</span>
           </div>
         </div>
-        
-        <p className="text-gray-600 text-sm mb-3 line-clamp-2">{fruit.description}</p>
+        <p className="text-gray-600 text-sm mb-3 custom-line-clamp">
+          {fruit.description}
+        </p>
         
         <div className="flex items-center justify-between mb-4">
           <span className="text-2xl font-bold text-green-600">${fruit.price.toFixed(2)}</span>

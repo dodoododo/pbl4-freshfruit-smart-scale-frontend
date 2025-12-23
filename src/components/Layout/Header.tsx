@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import Logo from './Logo';
 
-export type View = 'products' | 'bills' | 'billHistory' | 'admin' | 'account' | 'employees';
+export type View = 'products' | 'bills' | 'billHistory' | 'admin' | 'account' | 'employees' | 'customers';
 
 interface HeaderProps {
   onToggleCart: () => void;
@@ -48,16 +48,19 @@ const Header: React.FC<HeaderProps> = ({ onToggleCart, onNavigateToAdmin, curren
               Orders
             </button> */}
 
-            <button
-              onClick={() => onViewChange('bills')}
-              className={`px-3 py-2 text-sm font-medium transition-colors ${
-                currentView === 'bills'
-                  ? 'text-green-600 border-b-2 border-green-600'
-                  : 'text-gray-700 hover:text-green-600'
-              }`}
-            >
-              Dashboard
-            </button>
+            
+            {isAdmin && (
+              <button
+                onClick={() => onViewChange('bills')}
+                className={`px-3 py-2 text-sm font-medium transition-colors ${
+                  currentView === 'bills'
+                    ? 'text-green-600 border-b-2 border-green-600'
+                    : 'text-gray-700 hover:text-green-600'
+                }`}
+              >
+                Dashboard
+              </button>
+            )}
 
             {/* ✅ New Bill History button */}
             <button
@@ -83,6 +86,17 @@ const Header: React.FC<HeaderProps> = ({ onToggleCart, onNavigateToAdmin, curren
                 Employees
               </button>
             )}
+            
+            <button
+              onClick={() => onViewChange('customers')}
+              className={`px-3 py-2 text-sm font-medium transition-colors ${
+                currentView === 'customers'
+                  ? 'text-green-600 border-b-2 border-green-600'
+                  : 'text-gray-700 hover:text-green-600'
+              }`}
+            >
+              Customers
+            </button>
           </nav>
 
           {/* Right side icons */}
