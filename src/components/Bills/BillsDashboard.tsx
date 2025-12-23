@@ -109,7 +109,7 @@ const BillDashboard: React.FC = () => {
           fetch(`${API}/statistics/top-fruits?limit=5`).then((r) => r.json()) as Promise<TopFruit[]>,
           fetch(`${API}/statistics/revenue/by-fruits`).then((r) => r.json()) as Promise<RevenueByFruit[]>,
           fetch(`${API}/ViewAllBill`).then((r) => r.json()) as Promise<Bill[]>,
-          fetch(`${API}/user/profiles`).then((r) => r.json()) as Promise<UserProfile[]>,
+          fetch(`${API}/user/`).then((r) => r.json()) as Promise<UserProfile[]>,
         ]);
 
         setRevenueDay(dayRes);
@@ -134,9 +134,10 @@ const BillDashboard: React.FC = () => {
 
   // Mapping id -> name
   const profileMap: Record<number, string> = {};
-  profiles.forEach((p) => {
+  (Array.isArray(profiles) ? profiles : []).forEach((p) => {
     profileMap[p.id] = p.name;
   });
+
 
   // Doanh số nhân viên
   const employeeSalesMap: Record<string, number> = {};
