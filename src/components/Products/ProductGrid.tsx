@@ -65,7 +65,7 @@ const ProductGrid: React.FC = () => {
 
       {/* Filters */}
       <div className="mb-8 bg-white rounded-lg shadow-lg p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -77,7 +77,7 @@ const ProductGrid: React.FC = () => {
             />
           </div>
 
-          <div className="relative">
+          {/* <div className="relative">
             <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <select
               value={selectedCategory}
@@ -90,7 +90,7 @@ const ProductGrid: React.FC = () => {
                 </option>
               ))}
             </select>
-          </div>
+          </div> */}
 
           <select
             value={sortBy}

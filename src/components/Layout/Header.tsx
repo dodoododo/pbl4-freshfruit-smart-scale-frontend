@@ -56,7 +56,7 @@ const Header: React.FC<HeaderProps> = ({ onToggleCart, onNavigateToAdmin, curren
                   : 'text-gray-700 hover:text-green-600'
               }`}
             >
-              Bills
+              Dashboard
             </button>
 
             {/* ✅ New Bill History button */}

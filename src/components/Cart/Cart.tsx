@@ -21,6 +21,9 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
   const [weights, setWeights] = useState<Record<string, number>>({});
   const [identifiedImages, setIdentifiedImages] = useState<Record<string, string[]>>({});
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const lastImageRef = useRef<{ [fruitId: string ]: string }>({});
+
+
 
   const identifiedRef = useRef<Record<string, string[]>>({});
 
@@ -72,18 +75,40 @@ useEffect(() => {
         const foundFruit = fruits.find((f) => f.name === fruitName);
         if (!foundFruit) return;
 
-        if (!items.some((item) => item.fruit.id === foundFruit.id)) {
+        const fruitId = foundFruit.id;
+        const imgUrl = fileObj.image_url;
+
+        // ❌ BỎ QUA nếu ảnh cũ đã được xử lý FOR THIS FRUIT
+        if (lastImageRef.current[fruitId] === imgUrl) {
+          console.log("Skipping old image for fruit:", fruitName);
+          return;
+        }
+
+        // 👉 Cập nhật ảnh mới
+        lastImageRef.current[fruitId] = imgUrl;
+
+        // Add to cart nếu chưa có
+        if (!items.some((item) => item.fruit.id === fruitId)) {
           addToCart(foundFruit);
         }
 
-        identifiedRef.current[foundFruit.id] = [fileObj.image_url];
+        // Lưu ảnh (append)
+        identifiedRef.current[fruitId] = [
+          ...(identifiedRef.current[fruitId] || []),
+          imgUrl,
+        ];
         setIdentifiedImages({ ...identifiedRef.current });
 
+        // Cộng dồn cân nặng
         const detectedWeight = parseFloat(fileObj.weight) || 0;
-        setWeights((prev) => ({ ...prev, [foundFruit.id]: detectedWeight }));
 
-        updateQuantity(foundFruit.id, detectedWeight);
+        setWeights((prev) => {
+          const newWeight = (prev[fruitId] || 0) + detectedWeight;
+          updateQuantity(fruitId, newWeight);
+          return { ...prev, [fruitId]: newWeight };
+        });
       });
+
     } catch (err) {
       console.error("Error fetching latest files:", err);
     }
