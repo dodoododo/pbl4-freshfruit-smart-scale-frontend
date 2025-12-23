@@ -121,3 +121,14 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+.custom-line-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;     /* số dòng */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;  /* hiện dấu ... */
+  min-height: 2.5em;        /* đảm bảo luôn chiếm ít nhất 2 dòng */
+  line-height: 1.25em;
+}

@@ -597,12 +597,12 @@ type ApiUser = {
   username: string;
   role: boolean;
   valid: boolean;
-  password?: string;
 };
 
 const API = "https://yoursubdomain.loca.lt";
 
-/* ================= COMPONENT ================= */
+/* ================= SMALL UI ================= */
+
 function Info({
   label,
   value,
@@ -620,6 +620,8 @@ function Info({
   );
 }
 
+/* ================= COMPONENT ================= */
+
 export default function EmployeeManagement() {
   const [employees, setEmployees] = useState<ApiUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -633,9 +635,6 @@ export default function EmployeeManagement() {
   const [selectedUser, setSelectedUser] = useState<ApiUser | null>(null);
   const [editPayload, setEditPayload] = useState<Partial<ApiUser> | null>(null);
 
-  // Store password only when detail is fetched
-  const [passwordMap, setPasswordMap] = useState<Record<number, string>>({});
-
   /* ================= FETCH LIST ================= */
 
   useEffect(() => {
@@ -645,7 +644,7 @@ export default function EmployeeManagement() {
         const res = await fetch(`${API}/user/`, {
           headers: { accept: "application/json" },
         });
-        if (!res.ok) throw new Error("Failed to fetch users");
+        if (!res.ok) throw new Error("Fetch failed");
         const data: ApiUser[] = await res.json();
         setEmployees(data);
       } catch (err) {
@@ -658,29 +657,7 @@ export default function EmployeeManagement() {
     fetchUsers();
   }, []);
 
-  /* ================= FETCH DETAIL (ON DEMAND) ================= */
-
-  const fetchUserDetail = async (id: number): Promise<ApiUser | null> => {
-    try {
-      const res = await fetch(`${API}/user/profile/${id}`, {
-        headers: { accept: "application/json" },
-      });
-      if (!res.ok) throw new Error("Failed to fetch user detail");
-      const detail: ApiUser = await res.json();
-
-      if (detail.password) {
-        setPasswordMap((m) => ({ ...m, [id]: detail.password! }));
-      }
-
-      return detail;
-    } catch (err) {
-      console.error(err);
-      alert("Failed to load user detail");
-      return null;
-    }
-  };
-
-  /* ================= DERIVED DATA ================= */
+  /* ================= DERIVED ================= */
 
   const filtered = useMemo(() => {
     if (!search.trim()) return employees;
@@ -693,8 +670,6 @@ export default function EmployeeManagement() {
     );
   }, [employees, search]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
-
   const paginated = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return filtered.slice(start, start + itemsPerPage);
@@ -702,50 +677,44 @@ export default function EmployeeManagement() {
 
   /* ================= ACTIONS ================= */
 
-  const openView = async (user: ApiUser) => {
-    const detail = await fetchUserDetail(user.id);
-    if (!detail) return;
-    setSelectedUser(detail);
+  const openView = (user: ApiUser) => {
+    setSelectedUser(user);
     setViewModalOpen(true);
   };
 
-  const openEdit = async (user: ApiUser) => {
-    const detail = await fetchUserDetail(user.id);
-    if (!detail) return;
-
-    setSelectedUser(detail);
+  const openEdit = (user: ApiUser) => {
+    setSelectedUser(user);
     setEditPayload({
-      name: detail.name,
-      phone: detail.phone,
-      address: detail.address,
-      birth: detail.birth,
-      gender: detail.gender,
+      name: user.name,
+      phone: user.phone,
+      address: user.address,
+      birth: user.birth,
+      gender: user.gender,
     });
     setEditModalOpen(true);
   };
 
-  const toggleValid = async (user: ApiUser, newValid: boolean) => {
-    const body = {
-      ...user,
-      password: passwordMap[user.id] ?? "",
-      valid: newValid,
-    };
+  const changeUserState = async (user: ApiUser, unlock: boolean) => {
+    const url = unlock
+      ? `${API}/user/${user.id}/active`
+      : `${API}/user/${user.id}/ban`;
 
     try {
-      const res = await fetch(`${API}/user/profile/${user.id}`, {
+      const res = await fetch(url, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        headers: { accept: "application/json" },
       });
-      if (!res.ok) throw new Error("Failed to update state");
 
-      const updated: ApiUser = await res.json();
+      if (!res.ok) throw new Error("Failed to change state");
+
       setEmployees((prev) =>
-        prev.map((u) => (u.id === updated.id ? updated : u))
+        prev.map((u) =>
+          u.id === user.id ? { ...u, valid: unlock } : u
+        )
       );
     } catch (err) {
       console.error(err);
-      alert("Update failed");
+      alert("Không thể cập nhật trạng thái người dùng");
     }
   };
 
@@ -755,21 +724,26 @@ export default function EmployeeManagement() {
     const body = {
       ...selectedUser,
       ...editPayload,
-      password: passwordMap[selectedUser.id] ?? "",
     };
 
     try {
       const res = await fetch(`${API}/user/profile/${selectedUser.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          accept: "application/json",
+        },
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error("Failed to save");
+
+      if (!res.ok) throw new Error("Save failed");
 
       const updated: ApiUser = await res.json();
+
       setEmployees((prev) =>
         prev.map((u) => (u.id === updated.id ? updated : u))
       );
+
       setEditModalOpen(false);
       setSelectedUser(null);
       setEditPayload(null);
@@ -805,44 +779,53 @@ export default function EmployeeManagement() {
               <table className="w-full border text-sm">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="p-2">ID</th>
-                    <th className="p-2">Name</th>
-                    <th className="p-2">Gender</th>
-                    <th className="p-2">Phone</th>
-                    <th className="p-2">Email</th>
-                    <th className="p-2">State</th>
-                    <th className="p-2">Actions</th>
+                    <th className="p-2 text-center">ID</th>
+                    <th className="p-2 text-center">Name</th>
+                    <th className="p-2 text-center">Gender</th>
+                    <th className="p-2 text-center">Phone</th>
+                    <th className="p-2 text-center">Email</th>
+                    <th className="p-2 text-center">State</th>
+                    <th className="p-2 text-center">Actions</th>
                   </tr>
                 </thead>
+
                 <tbody>
                   {paginated.map((u) => (
                     <tr key={u.id} className="border-t">
-                      <td className="p-2">{u.id}</td>
-                      <td className="p-2">{u.name}</td>
-                      <td className="p-2">{u.gender ? "Male" : "Female"}</td>
-                      <td className="p-2">{u.phone}</td>
-                      <td className="p-2">{u.email}</td>
-                      <td className="p-2">
+                      <td className="p-2 text-center">{u.id}</td>
+                      <td className="p-2 text-center">{u.name}</td>
+                      <td className="p-2 text-center">
+                        {u.gender ? "Male" : "Female"}
+                      </td>
+                      <td className="p-2 text-center">{u.phone}</td>
+                      <td className="p-2 text-center">{u.email}</td>
+
+                      <td className="p-2 text-center">
                         <Select
                           value={u.valid ? "Unlocked" : "Locked"}
-                          onValueChange={(v) => toggleValid(u, v === "Unlocked")}
+                          onValueChange={(v) =>
+                            changeUserState(u, v === "Unlocked")
+                          }
                         >
-                          <SelectTrigger className="w-28">
+                          <SelectTrigger className="w-28 mx-auto">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Locked">Locked</SelectItem>
                             <SelectItem value="Unlocked">Unlocked</SelectItem>
+                            <SelectItem value="Locked">Locked</SelectItem>
                           </SelectContent>
                         </Select>
                       </td>
-                      <td className="p-2 flex gap-2">
-                        <Button variant="outline" onClick={() => openView(u)}>
-                          View
-                        </Button>
-                        <Button className="bg-green-600" onClick={() => openEdit(u)}>
-                          Edit
-                        </Button>
+
+                      <td className="p-2">
+                        <div className="flex justify-center gap-2">
+                          <Button variant="outline" onClick={() => openView(u)}>
+                            View
+                          </Button>
+                          <Button className="bg-green-600" onClick={() => openEdit(u)}>
+                            Edit
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -856,18 +839,16 @@ export default function EmployeeManagement() {
       {/* VIEW MODAL */}
       {viewModalOpen && selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white w-full max-w-2xl rounded-lg shadow-lg p-6 relative">
-            {/* Close */}
+          <div className="bg-white w-full max-w-2xl rounded-lg p-6 relative">
             <button
-              className="absolute top-3 right-3 text-gray-500 hover:text-black"
+              className="absolute top-3 right-3"
               onClick={() => setViewModalOpen(false)}
             >
               <X />
             </button>
 
-            <h3 className="text-lg font-semibold mb-5">User Details</h3>
+            <h3 className="text-lg font-semibold mb-4">User Detail</h3>
 
-            {/* CONTENT */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <Info label="ID" value={selectedUser.id} />
               <Info label="Username" value={selectedUser.username} />
@@ -886,30 +867,13 @@ export default function EmployeeManagement() {
                 }
               />
             </div>
-
-            {/* ACTION */}
-            <div className="mt-6 flex justify-end gap-3">
-              <Button
-                className="bg-green-600"
-                onClick={() => {
-                  setViewModalOpen(false);
-                  openEdit(selectedUser);
-                }}
-              >
-                Edit
-              </Button>
-              <Button variant="outline" onClick={() => setViewModalOpen(false)}>
-                Close
-              </Button>
-            </div>
           </div>
         </div>
       )}
 
-
       {/* EDIT MODAL */}
       {editModalOpen && selectedUser && editPayload && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white w-full max-w-xl rounded-lg p-6 relative">
             <button
               className="absolute top-3 right-3"
@@ -917,6 +881,7 @@ export default function EmployeeManagement() {
             >
               <X />
             </button>
+
             <h3 className="text-lg font-semibold mb-4">Edit User</h3>
 
             <div className="space-y-3">
@@ -927,6 +892,7 @@ export default function EmployeeManagement() {
                   setEditPayload((p) => ({ ...(p ?? {}), name: e.target.value }))
                 }
               />
+
               <Input
                 placeholder="Phone"
                 value={editPayload.phone ?? ""}
@@ -934,6 +900,7 @@ export default function EmployeeManagement() {
                   setEditPayload((p) => ({ ...(p ?? {}), phone: e.target.value }))
                 }
               />
+
               <Input
                 placeholder="Address"
                 value={editPayload.address ?? ""}
@@ -941,13 +908,46 @@ export default function EmployeeManagement() {
                   setEditPayload((p) => ({ ...(p ?? {}), address: e.target.value }))
                 }
               />
+
+              <Input
+                type="date"
+                value={(editPayload.birth ?? "").slice(0, 10)}
+                onChange={(e) =>
+                  setEditPayload((p) => ({ ...(p ?? {}), birth: e.target.value }))
+                }
+              />
+
+              <Select
+                value={
+                  typeof editPayload.gender === "boolean"
+                    ? editPayload.gender
+                      ? "Male"
+                      : "Female"
+                    : selectedUser.gender
+                    ? "Male"
+                    : "Female"
+                }
+                onValueChange={(v) =>
+                  setEditPayload((p) => ({ ...(p ?? {}), gender: v === "Male" }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Male">Male</SelectItem>
+                  <SelectItem value="Female">Female</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="mt-6 flex justify-end gap-3">
-              <Button onClick={saveEdits} className="bg-green-600">
+              <Button className="bg-green-600" onClick={saveEdits}>
                 Save
               </Button>
-              <Button onClick={() => setEditModalOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setEditModalOpen(false)}>
+                Cancel
+              </Button>
             </div>
           </div>
         </div>

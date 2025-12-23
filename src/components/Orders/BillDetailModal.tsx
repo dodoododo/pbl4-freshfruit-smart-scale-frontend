@@ -38,6 +38,9 @@ const BillDetailModal: React.FC<BillDetailModalProps> = ({ bill, onClose }) => {
           <p className="text-gray-700 mt-2">
             <span className="font-medium">Mã khách hàng:</span> {bill.cus_id}
           </p>
+          <p className="text-gray-700 mt-2">
+            <span className="font-medium">Mã nhân viên:</span> {bill.user_id}
+          </p>
         </div>
 
         {/* ===== Scrollable content ===== */}

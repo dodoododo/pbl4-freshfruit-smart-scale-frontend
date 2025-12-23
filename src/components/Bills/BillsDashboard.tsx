@@ -26,7 +26,7 @@ interface BillDetail {
 
 export interface Bill {
   bill_id: number;
-  user_id: number; // đúng API
+  user_id: number;
   date: string;
   cus_id: number;
   total_cost: number;
@@ -56,8 +56,9 @@ interface RevenueByFruit {
 }
 
 interface EmployeeRevenue {
-  employee: string;
-  total_sales: number;
+  user_id: number;
+  name: string;
+  total_revenue: number;
 }
 
 interface UserProfile {
@@ -71,6 +72,14 @@ interface UserProfile {
   username: string;
   role: boolean;
   valid: boolean;
+}
+
+
+interface TopCustomer {
+  cus_id: number;
+  name: string;
+  phone: string;
+  moneySpent: number;
 }
 
 const API = "https://yoursubdomain.loca.lt";
@@ -89,8 +98,8 @@ const BillDashboard: React.FC = () => {
   const [revenueMonth, setRevenueMonth] = useState<RevenueMonth[]>([]);
   const [topFruits, setTopFruits] = useState<TopFruit[]>([]);
   const [revenueByFruits, setRevenueByFruits] = useState<RevenueByFruit[]>([]);
-  const [bills, setBills] = useState<Bill[]>([]);
-  const [profiles, setProfiles] = useState<UserProfile[]>([]);
+  const [topSellers, setTopSellers] = useState<EmployeeRevenue[]>([]);
+  const [topCustomers, setTopCustomers] = useState<TopCustomer[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -101,23 +110,28 @@ const BillDashboard: React.FC = () => {
           monthRes,
           topFruitsRes,
           revenueByFruitsRes,
-          billsRes,
-          profilesRes,
+          topSellersRes,
+          topCustomersRes,
         ] = await Promise.all([
           fetch(`${API}/statistics/revenue/day`).then((r) => r.json()) as Promise<RevenueDay[]>,
           fetch(`${API}/statistics/revenue/month`).then((r) => r.json()) as Promise<RevenueMonth[]>,
           fetch(`${API}/statistics/top-fruits?limit=5`).then((r) => r.json()) as Promise<TopFruit[]>,
           fetch(`${API}/statistics/revenue/by-fruits`).then((r) => r.json()) as Promise<RevenueByFruit[]>,
-          fetch(`${API}/ViewAllBill`).then((r) => r.json()) as Promise<Bill[]>,
-          fetch(`${API}/user/`).then((r) => r.json()) as Promise<UserProfile[]>,
+          fetch(`${API}/statistics/top-sellers?limit=5`).then((r) => r.json()),
+          fetch(`${API}/statistics/top-customers?limit=5`).then((r) => r.json()),
         ]);
 
         setRevenueDay(dayRes);
         setRevenueMonth(monthRes);
         setTopFruits(topFruitsRes);
         setRevenueByFruits(revenueByFruitsRes);
-        setBills(billsRes);
-        setProfiles(profilesRes);
+        setTopSellers(topSellersRes);
+        setTopCustomers(
+          topCustomersRes.map((c: any) => ({
+            ...c,
+            moneySpent: c.moneySpent ?? 0,
+          }))
+        );
       } catch (err) {
         console.error("Failed to fetch data:", err);
       } finally {
@@ -131,27 +145,28 @@ const BillDashboard: React.FC = () => {
   // Color palettes
   const topFruitColors = generateColors(topFruits.length);
   const revenueFruitColors = generateColors(revenueByFruits.length);
+  const customerColors = generateColors(topCustomers.length);
 
-  // Mapping id -> name
-  const profileMap: Record<number, string> = {};
-  (Array.isArray(profiles) ? profiles : []).forEach((p) => {
-    profileMap[p.id] = p.name;
-  });
+  // // Mapping id -> name
+  // const profileMap: Record<number, string> = {};
+  // (Array.isArray(profiles) ? profiles : []).forEach((p) => {
+  //   profileMap[p.id] = p.name;
+  // });
 
 
-  // Doanh số nhân viên
-  const employeeSalesMap: Record<string, number> = {};
-  bills.forEach((bill) => {
-    const employeeName = profileMap[bill.user_id] || `ID ${bill.user_id}`;
-    if (!employeeSalesMap[employeeName]) employeeSalesMap[employeeName] = 0;
-    employeeSalesMap[employeeName] += bill.total_cost;
-  });
+  // // Doanh số nhân viên
+  // const employeeSalesMap: Record<string, number> = {};
+  // bills.forEach((bill) => {
+  //   const employeeName = profileMap[bill.user_id] || `ID ${bill.user_id}`;
+  //   if (!employeeSalesMap[employeeName]) employeeSalesMap[employeeName] = 0;
+  //   employeeSalesMap[employeeName] += bill.total_cost;
+  // });
 
-  const employeeSales: EmployeeRevenue[] = Object.entries(employeeSalesMap)
-    .map(([employee, total_sales]) => ({ employee, total_sales }))
-    .sort((a, b) => b.total_sales - a.total_sales);
+  // const employeeSales: EmployeeRevenue[] = Object.entries(employeeSalesMap)
+  //   .map(([employee, total_sales]) => ({ employee, total_sales }))
+  //   .sort((a, b) => b.total_sales - a.total_sales);
 
-  const employeeColors = generateColors(employeeSales.length);
+  const employeeColors = generateColors(topSellers.length);
 
   if (loading) {
     return <p className="text-center mt-10">Đang tải dữ liệu thống kê...</p>;
@@ -245,19 +260,52 @@ const BillDashboard: React.FC = () => {
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
-                data={employeeSales.map((e) => ({ name: e.employee, value: e.total_sales }))}
+                data={topSellers.map((e) => ({ name: e.name, value: e.total_revenue }))}
                 dataKey="value"
                 nameKey="name"
                 outerRadius={80}
                 label={(entry) => entry.name}
               >
-                {employeeSales.map((_, index) => (
+                {topSellers.map((_, index) => (
                   <Cell key={index} fill={employeeColors[index]} />
                 ))}
               </Pie>
               <Tooltip formatter={(value: number, name: string) => [`$${value.toFixed(2)}`, name]} />
             </PieChart>
           </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      
+      {/* 🆕 TOP 5 KHÁCH HÀNG */}
+      <Card>
+        <CardContent>
+          <h2 className="font-semibold mb-4">
+            Top 5 khách hàng tiêu nhiều tiền nhất
+          </h2>
+          {/* TABLE */}
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-sm border">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="p-2 text-left">Tên</th>
+                  <th className="p-2 text-left">SĐT</th>
+                  <th className="p-2 text-right">Tổng tiền ($)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topCustomers.map((c, i) => (
+                  <tr key={i} className="border-t">
+                    <td className="p-2">{c.name}</td>
+                    <td className="p-2">{c.phone}</td>
+                    <td className="p-2 text-right font-semibold text-green-600">
+                      ${(c.moneySpent ?? 0).toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
     </div>
