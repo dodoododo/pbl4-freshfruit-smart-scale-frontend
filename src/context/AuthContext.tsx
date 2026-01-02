@@ -71,7 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // =======================
   const fetchUserProfile = async (token: string) => {
     try {
-      const response = await fetch('https://yoursubdomain.loca.lt/user/me', {
+      const response = await fetch('https://wrap-jefferson-volumes-encounter.trycloudflare.com/user/me', {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: 'application/json',
@@ -111,7 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // =======================
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch('https://yoursubdomain.loca.lt/user/login', {
+      const response = await fetch('https://wrap-jefferson-volumes-encounter.trycloudflare.com/user/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -149,7 +149,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // =======================
   const signup = async (signupData: SignupData): Promise<boolean> => {
     try {
-      const response = await fetch('https://yoursubdomain.loca.lt/user/register', {
+      const response = await fetch('https://wrap-jefferson-volumes-encounter.trycloudflare.com/user/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

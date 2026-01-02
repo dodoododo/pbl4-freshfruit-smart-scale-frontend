@@ -22,7 +22,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
   useEffect(() => {
     const fetchFruits = async () => {
       try {
-        const res = await fetch("https://yoursubdomain.loca.lt/fruits/");
+        const res = await fetch("https://wrap-jefferson-volumes-encounter.trycloudflare.com/fruits/");
         if (!res.ok) throw new Error("Failed to fetch fruits");
         const data = await res.json();
         setFruits(data);
@@ -46,7 +46,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     };
 
     try {
-      const response = await fetch("https://yoursubdomain.loca.lt/fruits/", {
+      const response = await fetch("https://wrap-jefferson-volumes-encounter.trycloudflare.com/fruits/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -96,7 +96,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     };
 
     try {
-      const response = await fetch(`https://yoursubdomain.loca.lt/fruits/${editingFruit.id}`, {
+      const response = await fetch(`https://wrap-jefferson-volumes-encounter.trycloudflare.com/fruits/${editingFruit.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -123,7 +123,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
     if (!window.confirm('Are you sure you want to delete this fruit?')) return;
 
     try {
-      const response = await fetch(`https://yoursubdomain.loca.lt/fruits/${id}`, {
+      const response = await fetch(`https://wrap-jefferson-volumes-encounter.trycloudflare.com/fruits/${id}`, {
         method: "DELETE",
       });
 
@@ -264,7 +264,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onBack }) => {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Fruit Management</h1>
               <p className="text-gray-600">Manage your fruit inventory</p>
             </div>
           </div>

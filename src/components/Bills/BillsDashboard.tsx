@@ -82,7 +82,7 @@ interface TopCustomer {
   moneySpent: number;
 }
 
-const API = "https://yoursubdomain.loca.lt";
+const API = "https://wrap-jefferson-volumes-encounter.trycloudflare.com";
 
 const generateColors = (count: number): string[] => {
   const colors: string[] = [];

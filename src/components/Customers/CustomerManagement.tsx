@@ -6,8 +6,7 @@ import { motion } from "framer-motion";
 import { X, Plus } from "lucide-react";
 import type { Customer } from "../../types";
 
-
-const API = "https://yoursubdomain.loca.lt";
+const API = "https://wrap-jefferson-volumes-encounter.trycloudflare.com";
 
 /* ================= SMALL UI ================= */
 
@@ -42,9 +41,9 @@ export default function CustomerManagement() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
-    null
-  );
+  const [selectedCustomer, setSelectedCustomer] =
+    useState<Customer | null>(null);
+
   const [editPayload, setEditPayload] = useState<Partial<Customer>>({});
   const [createPayload, setCreatePayload] = useState<
     Omit<Customer, "cus_id">
@@ -77,7 +76,7 @@ export default function CustomerManagement() {
     fetchCustomers();
   }, []);
 
-  /* ================= FETCH DETAIL (ON DEMAND) ================= */
+  /* ================= FETCH DETAIL ================= */
 
   const fetchCustomerDetail = async (
     id: number
@@ -106,8 +105,6 @@ export default function CustomerManagement() {
         c.phone.toLowerCase().includes(q)
     );
   }, [customers, search]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
 
   const paginated = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -157,7 +154,9 @@ export default function CustomerManagement() {
 
       const updated: Customer = await res.json();
       setCustomers((prev) =>
-        prev.map((c) => (c.cus_id === updated.cus_id ? updated : c))
+        prev.map((c) =>
+          c.cus_id === updated.cus_id ? updated : c
+        )
       );
       setEditModalOpen(false);
       setSelectedCustomer(null);
@@ -227,46 +226,46 @@ export default function CustomerManagement() {
             <div className="text-center py-6">Loading...</div>
           ) : (
             <div className="overflow-x-auto">
-            <table className="w-full border text-sm">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="p-2 text-center">ID</th>
-                  <th className="p-2 text-center">Name</th>
-                  <th className="p-2 text-center">Phone</th>
-                  <th className="p-2 text-center">Spent ($)</th>
-                  <th className="p-2 text-center">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {paginated.map((c) => (
-                  <tr key={c.cus_id} className="border-t">
-                    <td className="p-2 text-center">{c.cus_id}</td>
-                    <td className="p-2 text-center">{c.name}</td>
-                    <td className="p-2 text-center">{c.phone}</td>
-                    <td className="p-2 text-center">
-                      {c.moneySpent.toFixed(2)}
-                    </td>
-                    <td className="p-2">
-                      <div className="flex justify-center gap-2">
-                        <Button
-                          variant="outline"
-                          onClick={() => openView(c)}
-                        >
-                          View
-                        </Button>
-                        <Button
-                          className="bg-green-600"
-                          onClick={() => openEdit(c)}
-                        >
-                          Edit
-                        </Button>
-                      </div>
-                    </td>
+              <table className="w-full border text-sm">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="p-2 text-center">ID</th>
+                    <th className="p-2 text-center">Name</th>
+                    <th className="p-2 text-center">Phone</th>
+                    <th className="p-2 text-center">Spent ($)</th>
+                    <th className="p-2 text-center">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+
+                <tbody>
+                  {paginated.map((c) => (
+                    <tr key={c.cus_id} className="border-t">
+                      <td className="p-2 text-center">{c.cus_id}</td>
+                      <td className="p-2 text-center">{c.name}</td>
+                      <td className="p-2 text-center">{c.phone}</td>
+                      <td className="p-2 text-center">
+                        {c.moneySpent.toFixed(2)}
+                      </td>
+                      <td className="p-2">
+                        <div className="flex justify-center gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => openView(c)}
+                          >
+                            View
+                          </Button>
+                          <Button
+                            className="bg-green-600"
+                            onClick={() => openEdit(c)}
+                          >
+                            Edit
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </CardContent>
@@ -275,7 +274,9 @@ export default function CustomerManagement() {
       {/* ===== VIEW MODAL ===== */}
       {viewModalOpen && selectedCustomer && (
         <Modal onClose={() => setViewModalOpen(false)}>
-          <h3 className="text-lg font-semibold mb-4">Customer Detail</h3>
+          <h3 className="text-lg font-semibold mb-4">
+            Customer Detail
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Info label="ID" value={selectedCustomer.cus_id} />
             <Info label="Name" value={selectedCustomer.name} />
@@ -293,27 +294,38 @@ export default function CustomerManagement() {
       {/* ===== EDIT MODAL ===== */}
       {editModalOpen && (
         <Modal onClose={() => setEditModalOpen(false)}>
-          <h3 className="text-lg font-semibold mb-4">Edit Customer</h3>
+          <h3 className="text-lg font-semibold mb-4">
+            Edit Customer
+          </h3>
           <div className="space-y-3">
             <Input
               placeholder="Name"
               value={editPayload.name ?? ""}
               onChange={(e) =>
-                setEditPayload((p) => ({ ...p, name: e.target.value }))
+                setEditPayload((p) => ({
+                  ...p,
+                  name: e.target.value,
+                }))
               }
             />
             <Input
               placeholder="Phone"
               value={editPayload.phone ?? ""}
               onChange={(e) =>
-                setEditPayload((p) => ({ ...p, phone: e.target.value }))
+                setEditPayload((p) => ({
+                  ...p,
+                  phone: e.target.value,
+                }))
               }
             />
             <Input
               placeholder="Address"
               value={editPayload.address ?? ""}
               onChange={(e) =>
-                setEditPayload((p) => ({ ...p, address: e.target.value }))
+                setEditPayload((p) => ({
+                  ...p,
+                  address: e.target.value,
+                }))
               }
             />
           </div>
@@ -321,7 +333,10 @@ export default function CustomerManagement() {
             <Button className="bg-green-600" onClick={saveEdit}>
               Save
             </Button>
-            <Button variant="outline" onClick={() => setEditModalOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setEditModalOpen(false)}
+            >
               Cancel
             </Button>
           </div>
@@ -331,35 +346,52 @@ export default function CustomerManagement() {
       {/* ===== CREATE MODAL ===== */}
       {createModalOpen && (
         <Modal onClose={() => setCreateModalOpen(false)}>
-          <h3 className="text-lg font-semibold mb-4">Create Customer</h3>
+          <h3 className="text-lg font-semibold mb-4">
+            Create Customer
+          </h3>
           <div className="space-y-3">
             <Input
               placeholder="Name"
               value={createPayload.name}
               onChange={(e) =>
-                setCreatePayload((p) => ({ ...p, name: e.target.value }))
+                setCreatePayload((p) => ({
+                  ...p,
+                  name: e.target.value,
+                }))
               }
             />
             <Input
               placeholder="Phone"
               value={createPayload.phone}
               onChange={(e) =>
-                setCreatePayload((p) => ({ ...p, phone: e.target.value }))
+                setCreatePayload((p) => ({
+                  ...p,
+                  phone: e.target.value,
+                }))
               }
             />
             <Input
               placeholder="Address"
               value={createPayload.address}
               onChange={(e) =>
-                setCreatePayload((p) => ({ ...p, address: e.target.value }))
+                setCreatePayload((p) => ({
+                  ...p,
+                  address: e.target.value,
+                }))
               }
             />
           </div>
           <div className="mt-6 flex justify-end gap-3">
-            <Button className="bg-green-600" onClick={createCustomer}>
+            <Button
+              className="bg-green-600"
+              onClick={createCustomer}
+            >
               Create
             </Button>
-            <Button variant="outline" onClick={() => setCreateModalOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setCreateModalOpen(false)}
+            >
               Cancel
             </Button>
           </div>
@@ -369,7 +401,7 @@ export default function CustomerManagement() {
   );
 }
 
-/* ================= MODAL WRAPPER ================= */
+/* ================= MODAL ================= */
 
 function Modal({
   children,
@@ -379,8 +411,14 @@ function Modal({
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white w-full max-w-xl rounded-lg shadow-lg p-6 relative max-h-[90vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onClick={onClose} // ✅ click overlay → đóng modal
+    >
+      <div
+        className="bg-white w-full max-w-xl rounded-lg shadow-lg p-6 relative max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()} // ✅ click trong modal → không đóng
+      >
         <button
           className="absolute top-3 right-3 text-gray-500 hover:text-black"
           onClick={onClose}

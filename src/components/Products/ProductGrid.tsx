@@ -13,7 +13,7 @@ const ProductGrid: React.FC = () => {
   useEffect(() => {
     const fetchFruits = async () => {
       try {
-        const res = await fetch("https://yoursubdomain.loca.lt/fruits/");
+        const res = await fetch("https://wrap-jefferson-volumes-encounter.trycloudflare.com/fruits/");
         if (!res.ok) throw new Error("Failed to fetch fruits");
         const data = await res.json();
         setFruits(data);
