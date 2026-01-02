@@ -12,7 +12,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://yoursubdomain.loca.lt",
+        target: "https://wrap-jefferson-volumes-encounter.trycloudflare.com",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },

@@ -41,7 +41,7 @@ const Signup: React.FC<SignupProps> = ({ onToggleMode }) => {
     }
 
     try {
-      const response = await fetch('https://yoursubdomain.loca.lt/user/register', {
+      const response = await fetch('https://wrap-jefferson-volumes-encounter.trycloudflare.com/user/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

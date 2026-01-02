@@ -1,3 +1,296 @@
+// import React, { useState, useEffect, useRef } from "react";
+// import { X, ShoppingBag, Trash2 } from "lucide-react";
+// import { useCart } from "../../context/CartContext";
+// import CheckoutForm from "./CheckoutForm";
+// import ProductCard from "../Products/ProductCard";
+// import type { Fruit } from "../../types";
+
+// import { toast, Toaster } from "react-hot-toast";
+
+// interface CartProps {
+//   isOpen: boolean;
+//   onClose: () => void;
+// }
+
+// const BASE_URL = "https://wrap-jefferson-volumes-encounter.trycloudflare.com";
+
+// const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
+//   const {
+//     items,
+//     addToCart,
+//     updateQuantity,
+//     removeFromCart,
+//     getTotalPrice,
+//     clearCart,
+//   } = useCart();
+
+//   const [showCheckout, setShowCheckout] = useState(false);
+//   const [fruits, setFruits] = useState<Fruit[]>([]);
+//   const [loadingFruits, setLoadingFruits] = useState(true);
+//   const [weights, setWeights] = useState<Record<string, number>>({});
+//   const [identifiedImages, setIdentifiedImages] = useState<Record<string, string[]>>({});
+//   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+//   const lastImageRef = useRef<{ [fruitId: string]: string }>({});
+//   const identifiedRef = useRef<Record<string, string[]>>({});
+//   const processedImagesRef = useRef<Set<string>>(new Set());
+
+//   // Load fruits
+//   useEffect(() => {
+//     if (!isOpen) return;
+
+//     const fetchAll = async () => {
+//       try {
+//         setLoadingFruits(true);
+
+//         const fruitsRes = await fetch(`${BASE_URL}/fruits/`);
+//         const fruitsData: Fruit[] = await fruitsRes.json();
+//         setFruits(fruitsData);
+
+//         const initialWeights: Record<string, number> = {};
+//         fruitsData.forEach((f) => {
+//           initialWeights[f.id] = 0;
+//         });
+//         setWeights(initialWeights);
+//       } catch (err) {
+//         console.error("Error fetching fruits:", err);
+//       } finally {
+//         setLoadingFruits(false);
+//       }
+//     };
+
+//     fetchAll();
+//   }, [isOpen]);
+
+//   // 🔧 UPDATED: fetch files/latest
+//   useEffect(() => {
+//     if (!isOpen || fruits.length === 0) return;
+//     if (showCheckout) return;
+
+//     const fetchFiles = async () => {
+//       try {
+//         const res = await fetch(`${BASE_URL}/files/latest`);
+//         const data = await res.json();
+//         console.log("Latest file:", data);
+
+//         if (data.status !== "success" || !data.files) return;
+
+//         const fileObj = data.files;
+
+//         const fruitName = fileObj.class;
+//         const foundFruit = fruits.find((f) => f.name === fruitName);
+//         if (!foundFruit) return;
+
+//         const fruitId = foundFruit.id;
+//         const imgUrl = fileObj.image_url;
+
+//         // 🔥 NEW LOGIC: phát hiện nhiều loại quả
+//         // if (
+//         //   items.length > 0 &&
+//         //   items.some((item) => item.fruit.id !== fruitId)
+//         // ) {
+//         //   toast.error("⚠️ Vui lòng chỉ đặt 1 loại quả mỗi lần");
+//         //   return;
+//         // }
+
+//         // 🔥 Ảnh đã xử lý
+//         if (processedImagesRef.current.has(imgUrl)) {
+//           return;
+//         }
+
+//         // Logic cũ: skip ảnh trùng
+//         if (lastImageRef.current[fruitId] === imgUrl) {
+//           return;
+//         }
+
+//         lastImageRef.current[fruitId] = imgUrl;
+
+//         // Add to cart nếu chưa có
+//         if (!items.some((item) => item.fruit.id === fruitId)) {
+//           addToCart(foundFruit);
+//         }
+
+//         // Lưu ảnh
+//         identifiedRef.current[fruitId] = [
+//           ...(identifiedRef.current[fruitId] || []),
+//           imgUrl,
+//         ];
+//         setIdentifiedImages({ ...identifiedRef.current });
+
+//         // Cộng dồn cân nặng
+//         const detectedWeight = parseFloat(fileObj.weight) || 0;
+
+//         setWeights((prev) => {
+//           const newWeight = (prev[fruitId] || 0) + detectedWeight;
+//           updateQuantity(fruitId, newWeight);
+//           return { ...prev, [fruitId]: newWeight };
+//         });
+
+//         processedImagesRef.current.add(imgUrl);
+//       } catch (err) {
+//         console.error("Error fetching latest files:", err);
+//       }
+//     };
+
+//     fetchFiles();
+//     const interval = setInterval(fetchFiles, 3000);
+//     return () => clearInterval(interval);
+//   }, [isOpen, fruits, items, showCheckout]);
+
+//   const handleCheckout = () => setShowCheckout(true);
+
+//   const handleCheckoutComplete = () => {
+//     clearCart();
+//     setShowCheckout(false);
+//     onClose();
+//   };
+
+//   const handleWeightChange = (fruitId: string, newWeight: number) => {
+//     setWeights((prev) => ({ ...prev, [fruitId]: newWeight }));
+//     updateQuantity(fruitId, newWeight);
+//   };
+
+//   if (!isOpen) return null;
+
+//   return (
+//     <div className="w-full fixed inset-0 z-50 overflow-hidden">
+//       <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose} />
+
+//       <div className="absolute right-0 top-0 h-full w-full bg-white shadow-xl">
+//         <div className="flex flex-col h-full">
+//           <div className="flex items-center justify-between p-6 border-b">
+//             <h2 className="text-xl font-semibold text-gray-800 flex items-center">
+//               <ShoppingBag className="w-6 h-6 mr-2" />
+//               Shopping Cart ({items.length})
+//             </h2>
+//             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full">
+//               <X className="w-5 h-5" />
+//             </button>
+//           </div>
+
+//           {showCheckout ? (
+//             <CheckoutForm
+//               onComplete={handleCheckoutComplete}
+//               onBack={() => setShowCheckout(false)}
+//             />
+//           ) : (
+//             <div className="flex flex-1 overflow-hidden">
+//               <div className="w-1/3 overflow-y-auto p-6 border-r">
+//                 {loadingFruits ? (
+//                   <div className="text-center py-12 text-gray-500">
+//                     Loading fruits...
+//                   </div>
+//                 ) : (
+//                   <>
+//                     <h3 className="text-lg font-medium mb-4">Add Fruits</h3>
+//                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//                       {fruits.map((fruit) => (
+//                         <ProductCard key={fruit.id} fruit={fruit} />
+//                       ))}
+//                     </div>
+//                   </>
+//                 )}
+//               </div>
+
+//               <div className="w-2/3 flex flex-col">
+//                 <div className="flex-1 overflow-y-auto p-6">
+//                   {items.map((item, index) => (
+//                     <div
+//                       key={item.fruit.id}
+//                       className="flex space-x-4 bg-gray-50 p-4 rounded-lg"
+//                     >
+//                       <span className="w-6">{index + 1}</span>
+
+//                       <img
+//                         src={item.fruit.image}
+//                         className="w-16 h-16 object-cover rounded-lg"
+//                       />
+
+//                       <div className="flex-1">
+//                         <h3>{item.fruit.name}</h3>
+//                         <p className="text-green-600">
+//                           {item.fruit.price.toLocaleString()}$ / kg
+//                         </p>
+//                         {identifiedImages[item.fruit.id] && (
+//                           <div className="flex flex-wrap gap-2 mt-2">
+//                             {identifiedImages[item.fruit.id].map((img, i) => (
+//                               <img
+//                                 key={i}
+//                                 src={img}
+//                                 className="w-20 h-20 object-cover rounded cursor-pointer"
+//                                 onClick={() => setPreviewImage(img)}
+//                               />
+//                             ))}
+//                           </div>
+//                         )}
+//                       </div>
+
+//                       <div className="flex items-center space-x-2">
+//                         <input
+//                           type="number"
+//                           step="0.01"
+//                           value={weights[item.fruit.id] ?? 0}
+//                           onChange={(e) =>
+//                             handleWeightChange(
+//                               item.fruit.id,
+//                               parseFloat(e.target.value) || 0
+//                             )
+//                           }
+//                           className="w-20 border rounded px-2 py-1"
+//                         />
+//                         <span>kg</span>
+
+//                         <button
+//                           onClick={() => removeFromCart(item.fruit.id)}
+//                           className="text-red-500"
+//                         >
+//                           <Trash2 className="w-4 h-4" />
+//                         </button>
+//                       </div>
+//                     </div>
+//                   ))}
+//                 </div>
+
+//                 {items.length > 0 && (
+//                   <div className="border-t p-6 bg-gray-50">
+//                     <div className="flex justify-between mb-4">
+//                       <span>Total:</span>
+//                       <span className="text-green-600 text-2xl">
+//                         {getTotalPrice().toLocaleString()} $
+//                       </span>
+//                     </div>
+//                     <button
+//                       onClick={handleCheckout}
+//                       className="w-full bg-green-500 text-white py-3 rounded-lg"
+//                     >
+//                       Check Out
+//                     </button>
+//                   </div>
+//                 )}
+//               </div>
+//             </div>
+//           )}
+//         </div>
+//       </div>
+
+//       {previewImage && (
+//         <div
+//           className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[999]"
+//           onClick={() => setPreviewImage(null)}
+//         >
+//           <img
+//             src={previewImage}
+//             className="max-w-[90%] max-h-[90%] rounded-lg"
+//           />
+//         </div>
+//       )}
+
+//       {/* <Toaster position="top-right" reverseOrder={false} /> */}
+//     </div>
+//   );
+// };
+
+// export default Cart;
 import React, { useState, useEffect, useRef } from "react";
 import { X, ShoppingBag, Trash2 } from "lucide-react";
 import { useCart } from "../../context/CartContext";
@@ -10,7 +303,7 @@ interface CartProps {
   onClose: () => void;
 }
 
-const BASE_URL = "https://yoursubdomain.loca.lt";
+const BASE_URL = "https://wrap-jefferson-volumes-encounter.trycloudflare.com";
 
 const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
   const { items, addToCart, updateQuantity, removeFromCart, getTotalPrice, clearCart } = useCart();
@@ -19,13 +312,16 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
   const [fruits, setFruits] = useState<Fruit[]>([]);
   const [loadingFruits, setLoadingFruits] = useState(true);
   const [weights, setWeights] = useState<Record<string, number>>({});
-  const [identifiedImages, setIdentifiedImages] = useState<Record<string, string[]>>({});
+  const [identifiedImages, setIdentifiedImages] = useState<Record<string, string>>({});
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const lastImageRef = useRef<{ [fruitId: string ]: string }>({});
+  const [fruitCounts, setFruitCounts] = useState<Record<string, number>>({});
+  const [fruitIdMap, setFruitIdMap] = useState<Record<string, number>>({});
 
 
 
-  const identifiedRef = useRef<Record<string, string[]>>({});
+
+  // const identifiedRef = useRef<Record<string, string[]>>({});
 
   // Load fruits
   useEffect(() => {
@@ -43,7 +339,11 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
         // 2. Initialize weights (default 0)
         const initialWeights: Record<string, number> = {};
         fruitsData.forEach((f) => {
-          initialWeights[f.id] = 0;
+          const cartItem = items.find((i) => i.fruit.id === f.id);
+
+          initialWeights[f.id] = cartItem
+            ? cartItem.quantity   // ✅ lấy lại weight từ cart
+            : 0;                  // ➕ fruit mới thì 0
         });
         setWeights(initialWeights);
       } catch (err) {
@@ -56,69 +356,68 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
     fetchAll();
   }, [isOpen]);
 
-// Fetch files/latest + polling
-useEffect(() => {
-  // Nếu đóng cart hoặc chưa có fruits → ngừng
-  if (!isOpen || fruits.length === 0) return;
+  useEffect(() => {
+    if (!isOpen || fruits.length === 0 || showCheckout) return;
 
-  // ⛔ NGỪNG POLLING khi đang checkout
-  if (showCheckout) return;
+    const fetchFiles = async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/files/latest`);
+        const data = await res.json();
+        if (data.status !== "success" || !data.files) return;
 
-  const fetchFiles = async () => {
-    try {
-      const res = await fetch(`${BASE_URL}/files/latest`);
-      const data = await res.json();
-      console.log("Latest files data:", data);
-      if (data.status !== "success" || !data.files) return;
+        Object.entries(data.files).forEach(([fruitName, fileObj]: [string, any]) => {
+          const foundFruit = fruits.find((f) => f.name === fruitName);
+          if (!foundFruit) return;
 
-      Object.entries(data.files).forEach(([fruitName, fileObj]: [string, any]) => {
-        const foundFruit = fruits.find((f) => f.name === fruitName);
-        if (!foundFruit) return;
+          const frontendFruitId = foundFruit.id;
+          const backendFruitId = Number(fileObj.fruit_id);
 
-        const fruitId = foundFruit.id;
-        const imgUrl = fileObj.image_url;
+          const imgUrl = fileObj.image_url;
+          const detectedWeight = parseFloat(fileObj.weight) || 0;
+          const detectedCount = Number(fileObj.count) || 0;
 
-        // ❌ BỎ QUA nếu ảnh cũ đã được xử lý FOR THIS FRUIT
-        if (lastImageRef.current[fruitId] === imgUrl) {
-          console.log("Skipping old image for fruit:", fruitName);
-          return;
-        }
+          if (lastImageRef.current[frontendFruitId] === imgUrl) return;
+          lastImageRef.current[frontendFruitId] = imgUrl;
 
-        // 👉 Cập nhật ảnh mới
-        lastImageRef.current[fruitId] = imgUrl;
+          if (!items.some((item) => item.fruit.id === frontendFruitId)) {
+            addToCart(foundFruit);
+          }
 
-        // Add to cart nếu chưa có
-        if (!items.some((item) => item.fruit.id === fruitId)) {
-          addToCart(foundFruit);
-        }
+          setIdentifiedImages((prev) => ({
+            ...prev,
+            [frontendFruitId]: imgUrl,
+          }));
 
-        // Lưu ảnh (append)
-        identifiedRef.current[fruitId] = [
-          ...(identifiedRef.current[fruitId] || []),
-          imgUrl,
-        ];
-        setIdentifiedImages({ ...identifiedRef.current });
+          setFruitCounts((prev) => ({
+            ...prev,
+            [frontendFruitId]: detectedCount,
+          }));
 
-        // Cộng dồn cân nặng
-        const detectedWeight = parseFloat(fileObj.weight) || 0;
+          setFruitIdMap((prev) => ({
+            ...prev,
+            [frontendFruitId]: backendFruitId,
+          }));
 
-        setWeights((prev) => {
-          const newWeight = (prev[fruitId] || 0) + detectedWeight;
-          updateQuantity(fruitId, newWeight);
-          return { ...prev, [fruitId]: newWeight };
+
+          setWeights((prev) => {
+            const newWeights = {
+              ...prev,
+              [frontendFruitId]: detectedWeight,
+            };
+            updateQuantity(frontendFruitId, detectedWeight);
+            return newWeights;
+          });
         });
-      });
+      } catch (err) {
+        console.error("Error fetching latest files:", err);
+      }
+    };
 
-    } catch (err) {
-      console.error("Error fetching latest files:", err);
-    }
-  };
+    fetchFiles();
+    const interval = setInterval(fetchFiles, 3000);
+    return () => clearInterval(interval);
+  }, [isOpen, fruits, items, showCheckout]);
 
-  fetchFiles();
-  const interval = setInterval(fetchFiles, 3000);
-
-  return () => clearInterval(interval);
-}, [isOpen, fruits, items, showCheckout]);    // 👈 thêm showCheckout
 
   const handleCheckout = () => setShowCheckout(true);
 
@@ -132,6 +431,49 @@ useEffect(() => {
     setWeights((prev) => ({ ...prev, [fruitId]: newWeight }));
     updateQuantity(fruitId, newWeight);
   };
+
+  const deleteFruitFiles = async (frontendFruitId: string) => {
+    const backendFruitId = fruitIdMap[frontendFruitId];
+    if (!backendFruitId) return;
+
+    try {
+      await fetch(`${BASE_URL}/files/by-fruit/${backendFruitId}`, {
+        method: "DELETE",
+        headers: {
+          accept: "application/json",
+        },
+      });
+
+      // ✅ clear local states
+      setIdentifiedImages((prev) => {
+        const copy = { ...prev };
+        delete copy[frontendFruitId];
+        return copy;
+      });
+
+      setFruitCounts((prev) => {
+        const copy = { ...prev };
+        delete copy[frontendFruitId];
+        return copy;
+      });
+
+      setWeights((prev) => {
+        const copy = { ...prev };
+        delete copy[frontendFruitId];
+        return copy;
+      });
+
+      setFruitIdMap((prev) => {
+        const copy = { ...prev };
+        delete copy[frontendFruitId];
+        return copy;
+      });
+
+    } catch (err) {
+      console.error("Delete fruit files failed:", err);
+    }
+  };
+
 
   if (!isOpen) return null;
 
@@ -208,14 +550,18 @@ useEffect(() => {
                             </p>
 
                             {/* Identified Image (click to preview) */}
-                            {identifiedImages[item.fruit.id]?.map((imgUrl, idx) => (
+                            {identifiedImages[item.fruit.id] && (
                               <img
-                                key={idx}
-                                src={imgUrl}
-                                className="w-20 h-20 object-cover rounded mt-2 cursor-pointer transition-transform hover:scale-105"
-                                onClick={() => setPreviewImage(imgUrl)}
+                                src={identifiedImages[item.fruit.id]}
+                                className="w-24 h-24 object-cover rounded mt-2 cursor-pointer"
+                                onClick={() => setPreviewImage(identifiedImages[item.fruit.id])}
                               />
-                            ))}
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-800">
+                              Quantity: {fruitCounts[item.fruit.id] ?? 0} {item.fruit.name}
+                            </h3>
                           </div>
 
                           {/* WEIGHT INPUT + REMOVE */}
@@ -231,9 +577,11 @@ useEffect(() => {
                               className="w-20 border rounded px-2 py-1 text-right"
                             />
                             <span className="text-gray-600">kg</span>
-
                             <button
-                              onClick={() => removeFromCart(item.fruit.id)}
+                              onClick={async () => {
+                                await deleteFruitFiles(item.fruit.id);
+                                removeFromCart(item.fruit.id);
+                              }}
                               className="p-1 text-red-500 hover:bg-red-50 rounded ml-2"
                             >
                               <Trash2 className="w-4 h-4" />

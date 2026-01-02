@@ -11,10 +11,16 @@ const BillDetailModal: React.FC<BillDetailModalProps> = ({ bill, onClose }) => {
   if (!bill) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      {/* Modal container */}
-      <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-lg shadow-lg flex flex-col relative">
-        
+    // 🔴 Overlay (click ngoài để đóng)
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onClick={onClose}
+    >
+      {/* 🔵 Modal container */}
+      <div
+        className="bg-white w-full max-w-2xl max-h-[90vh] rounded-lg shadow-lg flex flex-col relative"
+        onClick={(e) => e.stopPropagation()} // ❌ chặn click trong modal
+      >
         {/* Close button */}
         <button
           onClick={onClose}
@@ -28,6 +34,7 @@ const BillDetailModal: React.FC<BillDetailModalProps> = ({ bill, onClose }) => {
           <h2 className="text-2xl font-bold text-gray-800 mb-1">
             Chi tiết hóa đơn #{bill.bill_id}
           </h2>
+
           <p className="text-sm text-gray-600">
             Ngày tạo:{" "}
             {new Date(
@@ -38,7 +45,8 @@ const BillDetailModal: React.FC<BillDetailModalProps> = ({ bill, onClose }) => {
           <p className="text-gray-700 mt-2">
             <span className="font-medium">Mã khách hàng:</span> {bill.cus_id}
           </p>
-          <p className="text-gray-700 mt-2">
+
+          <p className="text-gray-700 mt-1">
             <span className="font-medium">Mã nhân viên:</span> {bill.user_id}
           </p>
         </div>

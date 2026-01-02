@@ -9,7 +9,7 @@ interface AccountPageProps {
   onBack: () => void;
 }
 
-const API = "https://yoursubdomain.loca.lt";
+const API = "https://wrap-jefferson-volumes-encounter.trycloudflare.com";
 
 const AccountPage: React.FC<AccountPageProps> = ({ onBack }) => {
   const token = localStorage.getItem("accessToken");

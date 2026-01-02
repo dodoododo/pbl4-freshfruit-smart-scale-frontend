@@ -9,7 +9,7 @@ interface CheckoutFormProps {
   onBack: () => void;
 }
 
-const API_BASE = "https://yoursubdomain.loca.lt";
+const API_BASE = "https://wrap-jefferson-volumes-encounter.trycloudflare.com";
 
 const currentUser = localStorage.getItem('currentUser');
 
@@ -108,57 +108,56 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onComplete, onBack }) => {
   };
 
   // 🧾 SUBMIT ORDER
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!totalIsValid) return;
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!totalIsValid) return;
 
-    setIsProcessing(true);
-    try {
-      // ✅ Update existing customer spending
-      if (foundCustomer) {
-        const updatedCustomer = {
-          ...foundCustomer,
-          moneySpent: (foundCustomer.moneySpent || 0) + total,
-        };
-        await fetch(`${API_BASE}/customer/${foundCustomer.cus_id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updatedCustomer),
-        });
-      }
-
-      // ✅ Prepare bill
-      const billData = {
-        user_id: currentUser ? JSON.parse(currentUser).id : 1, // <---- ✅ mặc định user_id = 1
-        cus_id: foundCustomer?.cus_id || 0,
-        items: items.map((item) => ({
-          fruit_id: item.fruit.id,
-          weight: item.quantity,
-          price: item.fruit.price,
-        })),
+  setIsProcessing(true);
+  try {
+    // ❌ BỎ update customer nếu không có
+    if (foundCustomer) {
+      const updatedCustomer = {
+        ...foundCustomer,
+        moneySpent: (foundCustomer.moneySpent || 0) + total,
       };
-
-      // ✅ Send bill to API
-      const billRes = await fetch(`${API_BASE}/bill`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          accept: "application/json",
-        },
-        body: JSON.stringify(billData),
+      await fetch(`${API_BASE}/customer/${foundCustomer.cus_id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedCustomer),
       });
-
-      if (!billRes.ok) throw new Error(`Bill creation failed: ${billRes.status}`);
-      const bill = await billRes.json();
-
-      setOrderId(bill.id);
-      setOrderComplete(true);
-    } catch {
-      setError("Lỗi khi gửi đơn hàng hoặc tạo bill.");
-    } finally {
-      setIsProcessing(false);
     }
-  };
+
+    const billData = {
+      user_id: currentUser ? JSON.parse(currentUser).id : 1,
+      cus_id: foundCustomer ? foundCustomer.cus_id : null, // ✅ null nếu không có
+      items: items.map((item) => ({
+        fruit_id: item.fruit.id,
+        weight: item.quantity,
+        price: item.fruit.price,
+      })),
+    };
+
+    const billRes = await fetch(`${API_BASE}/bill`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        accept: "application/json",
+      },
+      body: JSON.stringify(billData),
+    });
+
+    if (!billRes.ok) throw new Error();
+    const bill = await billRes.json();
+
+    setOrderId(bill.id);
+    setOrderComplete(true);
+  } catch {
+    setError("Lỗi khi gửi đơn hàng.");
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
 
   // ✅ ORDER COMPLETE
   if (orderComplete) {
@@ -166,7 +165,6 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onComplete, onBack }) => {
       <div className="p-6 text-center">
         <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
         <h2 className="text-2xl font-bold mb-2">Đặt hàng thành công!</h2>
-        <p className="text-gray-600 mb-4">Mã đơn: #{orderId}</p>
         <button
           onClick={onComplete}
           className="w-full bg-gradient-to-r from-green-500 to-orange-500 text-white py-3 rounded-lg font-medium hover:from-green-600 hover:to-orange-600"
@@ -337,7 +335,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ onComplete, onBack }) => {
                 className="flex justify-between items-center mb-2"
               >
                 <span className="text-sm text-gray-600">
-                  {item.fruit.name} x {item.quantity.toFixed(3)} kg
+                  {item.fruit.name} : {item.quantity.toFixed(3)} kg x ${item.fruit.price.toFixed(2)}/kg
                 </span>
                 <span className="text-sm font-medium">
                   ${(item.fruit.price * item.quantity).toFixed(2)}

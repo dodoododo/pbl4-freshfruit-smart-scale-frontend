@@ -11,7 +11,7 @@ const BillHistory: React.FC = () => {
   useEffect(() => {
     const fetchBills = async () => {
       try {
-        const res = await fetch("https://yoursubdomain.loca.lt/ViewAllBill", {
+        const res = await fetch("https://wrap-jefferson-volumes-encounter.trycloudflare.com/ViewAllBill", {
           method: "GET",
           headers: { accept: "application/json" },
         });
